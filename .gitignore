@@ -1,0 +1,12 @@
+node_modules/
+.env
+*.log
+.DS_Store
+uploads/
+.coverage
+htmlcov/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python

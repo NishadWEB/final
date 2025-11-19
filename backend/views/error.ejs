@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - MediDiag</title>
+    <link rel="stylesheet" href="/main/main.css">
+    <link rel="stylesheet" href="/navbar/navbar.css">
+</head>
+<body>
+    <%- include('./headers/launchheader') %>
+    
+    <div class="container" style="padding: 100px 0; text-align: center;">
+        <div class="error-content">
+            <h1 style="font-size: 4rem; color: #ef4444; margin-bottom: 20px;">⚠️</h1>
+            <h2 style="margin-bottom: 20px;">Something went wrong</h2>
+            <p style="color: var(--text-light); margin-bottom: 30px; font-size: 1.125rem;">
+                <%= typeof error !== 'undefined' ? error : 'An unexpected error occurred' %>
+            </p>
+            <a href="/" class="btn btn-primary">Return to Home</a>
+        </div>
+    </div>
+
+    <%- include('./main/footer') %>
+</body>
+</html>

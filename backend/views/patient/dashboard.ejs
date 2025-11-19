@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/main/main.css">
+    <link rel="stylesheet" href="/navbar/navbar.css">
+    <link rel="stylesheet" href="/patient/dashboard.css">
+</head>
+<body>
+    <%- include('../headers/preloginheader') %>
+    
+    <div class="container patient-dashboard">
+        <div class="dashboard-grid">
+            <aside class="sidebar">
+                <nav class="sidebar-nav">
+                    <ul>
+                        <li><a href="/patient/dashboard" class="active">Dashboard</a></li>
+                        <li><a href="/patient/doctors">Find Doctors</a></li>
+                        <li><a href="/patient/appointments">My Appointments</a></li>
+                        <li><a href="/patient/profile">Profile</a></li>
+                        <li><a href="/auth/logout">Logout</a></li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <main class="dashboard-content">
+                <div class="welcome-section">
+                    <h1>Welcome, <%= patient.full_name %>!</h1>
+                    <p>Your health journey starts here. We're here to support you every step of the way.</p>
+                </div>
+
+                <div class="quick-actions">
+                    <a href="/patient/doctors" class="quick-action-card">
+                        <div class="quick-action-icon">👨‍⚕️</div>
+                        <h3>Find Doctors</h3>
+                        <p>Book appointments with specialists</p>
+                    </a>
+                    <a href="/patient/appointments" class="quick-action-card">
+                        <div class="quick-action-icon">📅</div>
+                        <h3>My Appointments</h3>
+                        <p>View and manage your bookings</p>
+                    </a>
+                    <div class="quick-action-card" onclick="document.getElementById('diagnosis-tool').scrollIntoView()">
+                        <div class="quick-action-icon">🔍</div>
+                        <h3>Symptom Checker</h3>
+                        <p>Get preliminary analysis</p>
+                    </div>
+                </div>
+
+                <div class="recent-appointments">
+                    <h2>Recent Appointments</h2>
+                    <div class="appointment-list">
+                        <% if (appointments.length > 0) { %>
+                            <% appointments.slice(0, 5).forEach(appointment => { %>
+                                <div class="appointment-item">
+                                    <div class="appointment-info">
+                                        <h4>Dr. <%= appointment.doctor_name %></h4>
+                                        <p><%= appointment.specialization %></p>
+                                        <p><%= new Date(appointment.appointment_date).toLocaleString() %></p>
+                                    </div>
+                                    <div class="appointment-status status-<%= appointment.status %>">
+                                        <%= appointment.status %>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <p>No appointments yet. <a href="/patient/doctors">Book your first appointment</a></p>
+                        <% } %>
+                    </div>
+                </div>
+
+                <div id="diagnosis-tool" class="diagnosis-section">
+                    <h2>Symptom Checker</h2>
+                    <p>Describe your symptoms for a preliminary analysis</p>
+                    
+                    <div class="form-group">
+                        <textarea id="symptoms" class="symptom-input" placeholder="Describe your symptoms in detail..."></textarea>
+                    </div>
+                    
+                    <button id="diagnose-btn" class="btn btn-primary">Analyze Symptoms</button>
+                    
+                    <div id="diagnosis-result" class="diagnosis-result" style="display: none;">
+                        <!-- Diagnosis results will appear here -->
+                    </div>
+
+                    <div id="patient-chat" class="chat-section">
+                        <h2>Chat with Care Team</h2>
+                        <div id="chat-window" class="chat-window">
+                            <div id="chat-messages" class="chat-messages"></div>
+                        </div>
+                        <div class="chat-input-row">
+                            <input id="chat-input" type="text" placeholder="Type your message..." />
+                            <button id="chat-send" class="btn btn-primary">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="/navbar/navbar.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- embed current user safely as JSON so EJS tokens don't break JS parsing -->
+    <script id="current-user" type="application/json"><%- JSON.stringify({ id: (user && user.id) || null, role: (user && user.role) || '', patientId: (patient && patient.id) || null }) %></script>
+    <script>
+        try {
+            const el = document.getElementById('current-user');
+            window.CURRENT_USER = el && el.textContent ? JSON.parse(el.textContent) : { id: null, role: '', patientId: null };
+        } catch (e) {
+            window.CURRENT_USER = { id: null, role: '', patientId: null };
+        }
+    </script>
+    <script src="/patient/dashboard.js"></script>
+</body>
+</html>

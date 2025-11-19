@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediDiag - Choose Your Portal</title>
+    <link rel="stylesheet" href="/main/main.css">
+    <link rel="stylesheet" href="/navbar/navbar.css">
+    <link rel="stylesheet" href="/homepage/prelogin.css">
+</head>
+<body>
+    <%- include('../headers/preloginheader') %>
+    
+    <section class="prelogin-hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Your Health Journey Starts Here</h1>
+                <p class="hero-quote">"Every great healthcare journey begins with a single step - and you've just taken it. Your wellbeing is our shared priority, and we're here to walk this path with you."</p>
+                
+                <div class="portal-selection">
+                    <div class="portal-card" data-role="patient">
+                        <div class="portal-icon">👤</div>
+                        <h2>Patient Portal</h2>
+                        <p>Access preliminary diagnosis, book appointments with doctors, and manage your health records securely.</p>
+                        <a href="/auth/login?role=patient" class="btn btn-primary">Login as Patient</a>
+                        <a href="/auth/register?role=patient" class="btn btn-outline">Register as Patient</a>
+                    </div>
+
+                    <div class="portal-card" data-role="doctor">
+                        <div class="portal-icon">👨‍⚕️</div>
+                        <h2>Doctor Portal</h2>
+                        <p>Manage your practice, consult with patients, and access professional tools for healthcare delivery.</p>
+                        <a href="/auth/login?role=doctor" class="btn btn-primary">Login as Doctor</a>
+                        <a href="/auth/register?role=doctor" class="btn btn-outline">Register as Doctor</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <%- include('../main/footer') %>
+    
+    <script src="/navbar/navbar.js"></script>
+    <script src="/scrollbutton/scrollbutton.js"></script>
+</body>
+</html>

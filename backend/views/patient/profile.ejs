@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - MediDiag</title>
+    <link rel="stylesheet" href="/main/main.css">
+    <link rel="stylesheet" href="/navbar/navbar.css">
+</head>
+<body>
+    <%- include('../headers/preloginheader') %>
+    
+    <div class="container patient-dashboard">
+        <div class="dashboard-grid">
+            <aside class="sidebar">
+                <nav class="sidebar-nav">
+                    <ul>
+                        <li><a href="/patient/dashboard">Dashboard</a></li>
+                        <li><a href="/patient/doctors">Find Doctors</a></li>
+                        <li><a href="/patient/appointments">My Appointments</a></li>
+                        <li><a href="/patient/profile" class="active">Profile</a></li>
+                        <li><a href="/auth/logout">Logout</a></li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <main class="dashboard-content">
+                <h1>My Profile</h1>
+                
+                <div class="profile-section">
+                    <div class="card">
+                        <h2>Personal Information</h2>
+                        <form id="profile-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Full Name</label>
+                                    <input type="text" name="full_name" class="form-control" value="<%= patient.full_name %>" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" value="<%= patient.email %>" disabled>
+                                    <small>Contact support to change email</small>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Date of Birth</label>
+                                    <input type="date" name="date_of_birth" class="form-control" value="<%= patient.date_of_birth %>">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Gender</label>
+                                    <select name="gender" class="form-control">
+                                        <option value="Male" <%= patient.gender === 'Male' ? 'selected' : '' %>>Male</option>
+                                        <option value="Female" <%= patient.gender === 'Female' ? 'selected' : '' %>>Female</option>
+                                        <option value="Other" <%= patient.gender === 'Other' ? 'selected' : '' %>>Other</option>
+                                        <option value="Prefer not to say" <%= patient.gender === 'Prefer not to say' ? 'selected' : '' %>>Prefer not to say</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" name="phone" class="form-control" value="<%= patient.phone %>">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Address</label>
+                                <textarea name="address" class="form-control" rows="3"><%= patient.address %></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Emergency Contact</label>
+                                <input type="text" name="emergency_contact" class="form-control" value="<%= patient.emergency_contact %>" placeholder="Name and phone number">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Update Profile</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="security-section" style="margin-top: 40px;">
+                    <div class="card">
+                        <h2>Security</h2>
+                        <button class="btn btn-outline" onclick="changePassword()">Change Password</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        function changePassword() {
+            const newPassword = prompt('Enter new password:');
+            if (newPassword && newPassword.length >= 6) {
+                // In a real app, you'd make an API call here
+                alert('Password change request sent. You will receive an email with instructions.');
+            } else if (newPassword) {
+                alert('Password must be at least 6 characters long.');
+            }
+        }
+
+        document.getElementById('profile-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = e.target;
+            const data = {
+                full_name: form.full_name.value,
+                date_of_birth: form.date_of_birth.value,
+                gender: form.gender.value,
+                phone: form.phone.value,
+                address: form.address.value,
+                emergency_contact: form.emergency_contact.value
+            };
+
+            try {
+                const res = await fetch('/patient/profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const json = await res.json();
+                if (res.ok && json.success) {
+                    alert('Profile updated successfully!');
+                    location.reload();
+                } else {
+                    alert('Failed to update profile: ' + (json.error || json.message || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error('Profile update error:', err);
+                alert('Failed to update profile. Check console for details.');
+            }
+        });
+    </script>
+</body>
+</html>

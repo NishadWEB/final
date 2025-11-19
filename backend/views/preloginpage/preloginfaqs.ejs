@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQs - MediDiag</title>
+    <link rel="stylesheet" href="/main/main.css">
+    <link rel="stylesheet" href="/navbar/navbar.css">
+    <link rel="stylesheet" href="/faqs/faqs.css">
+</head>
+<body>
+    <%- include('../headers/preloginheader') %>
+    
+    <section class="faqs-hero">
+        <div class="container">
+            <h1>Frequently Asked Questions</h1>
+            <p>Find answers to common questions</p>
+        </div>
+    </section>
+
+    <section class="faqs-content">
+        <div class="container">
+            <!-- Same FAQ content as launchpage/faqs.ejs -->
+            <div class="faq-list">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        How do I create an account?
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Click on Sign Up and choose your role as Patient or Doctor.</p>
+                    </div>
+                </div>
+                <!-- Add more FAQs as needed -->
+            </div>
+        </div>
+    </section>
+
+    <%- include('../main/footer') %>
+    
+    <script src="/faqs/faqs.js"></script>
+</body>
+</html>

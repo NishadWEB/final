@@ -1,0 +1,37 @@
+<header class="navbar">
+    <div class="navbar-container">
+        <a href="/" class="navbar-brand">MediDiag</a>
+        
+        <button class="mobile-menu-btn">☰</button>
+        
+        <nav class="navbar-nav">
+            <a href="/">Home</a>
+            <a href="/about">About</a>
+            <a href="/features">Features</a>
+            <a href="/faqs">FAQs</a>
+            <a href="/contact">Contact</a>
+            
+            <% if (user) { %>
+                <div class="user-menu">
+                    <a href="#">
+                        <% if (user.role === 'patient') { %>
+                            Patient Portal
+                        <% } else { %>
+                            Doctor Portal
+                        <% } %>
+                    </a>
+                    <div class="user-dropdown">
+                        <a href="/<%= user.role %>/dashboard">Dashboard</a>
+                        <a href="/<%= user.role %>/profile">Profile</a>
+                        <a href="/auth/logout">Logout</a>
+                    </div>
+                </div>
+            <% } else { %>
+                <div class="navbar-actions">
+                    <a href="/auth/login" class="btn btn-outline">Login</a>
+                    <a href="/auth/register" class="btn btn-primary">Sign Up</a>
+                </div>
+            <% } %>
+        </nav>
+    </div>
+</header>

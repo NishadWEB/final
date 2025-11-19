@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - MediDiag</title>
+    <link rel="stylesheet" href="/main/main.css">
+    <link rel="stylesheet" href="/navbar/navbar.css">
+    <link rel="stylesheet" href="/register/register.css">
+</head>
+<body>
+    <%- include('../headers/preloginheader') %>
+    
+    <div class="container">
+        <div class="register-content">
+            <div class="register-form">
+                <div class="form-header">
+                    <h1>Create Your Account</h1>
+                    <p>Join thousands of patients and doctors using MediDiag</p>
+                </div>
+
+                <% if (error) { %>
+                    <div class="alert alert-error">
+                        <%= error %>
+                    </div>
+                <% } %>
+
+                <form id="register-form" action="/auth/register" method="POST">
+                    <div class="role-selection">
+                        <div class="role-option">
+                            <input type="radio" id="role-patient" name="role" value="patient" required>
+                            <label for="role-patient" class="role-label">
+                                <span class="role-icon">👤</span>
+                                Patient
+                            </label>
+                        </div>
+                        <div class="role-option">
+                            <input type="radio" id="role-doctor" name="role" value="doctor" required>
+                            <label for="role-doctor" class="role-label">
+                                <span class="role-icon">👨‍⚕️</span>
+                                Doctor
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="full_name" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" id="password" class="form-control" required minlength="6">
+                        <div class="password-strength">
+                            <div class="strength-bar"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" name="confirm_password" id="confirm_password" class="form-control" required>
+                    </div>
+
+                    <!-- Patient Specific Fields -->
+                    <div class="patient-field" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Date of Birth</label>
+                                <input type="date" name="date_of_birth" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Gender</label>
+                                <select name="gender" class="form-control">
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                    <option value="Prefer not to say">Prefer not to say</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Phone Number</label>
+                            <input type="tel" name="phone" class="form-control">
+                        </div>
+                    </div>
+
+                    <!-- Doctor Specific Fields -->
+                    <div class="doctor-field" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label">Specialization</label>
+                            <input type="text" name="specialization" class="form-control" placeholder="e.g., Cardiology, Pediatrics">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">License Number</label>
+                            <input type="text" name="license_number" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Years of Experience</label>
+                            <input type="number" name="experience_years" class="form-control" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Hospital Affiliation</label>
+                            <input type="text" name="hospital_affiliation" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Consultation Fee (₹)</label>
+                            <input type="number" name="consultation_fee" class="form-control" min="0" step="0.01">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Create Account</button>
+                </form>
+
+                <div class="form-footer">
+                    <p>Already have an account? <a href="/auth/login">Sign in here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/navbar/navbar.js"></script>
+    <script src="/register/register.js"></script>
+</body>
+</html>

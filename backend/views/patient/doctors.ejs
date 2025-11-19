@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Doctors - MediDiag</title>
+    <link rel="stylesheet" href="/main/main.css">
+    <link rel="stylesheet" href="/navbar/navbar.css">
+    <link rel="stylesheet" href="/patient/doctors.css">
+</head>
+<body>
+    <%- include('../headers/preloginheader') %>
+    
+    <div class="container patient-dashboard">
+        <div class="dashboard-grid">
+            <aside class="sidebar">
+                <nav class="sidebar-nav">
+                    <ul>
+                        <li><a href="/patient/dashboard">Dashboard</a></li>
+                        <li><a href="/patient/doctors" class="active">Find Doctors</a></li>
+                        <li><a href="/patient/appointments">My Appointments</a></li>
+                        <li><a href="/patient/profile">Profile</a></li>
+                        <li><a href="/auth/logout">Logout</a></li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <main class="dashboard-content">
+                <h1>Find Doctors</h1>
+                <p>Book appointments with verified healthcare professionals</p>
+
+                <div class="search-filters">
+                    <div class="filter-row">
+                        <div class="form-group">
+                            <label class="form-label">Search Doctors</label>
+                            <input type="text" id="search-input" class="form-control" placeholder="Search by name, specialization...">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Specialization</label>
+                            <select id="specialization-filter" class="form-control">
+                                <option value="">All Specializations</option>
+                                <option value="Cardiology">Cardiology</option>
+                                <option value="Dermatology">Dermatology</option>
+                                <option value="Pediatrics">Pediatrics</option>
+                                <option value="Orthopedics">Orthopedics</option>
+                                <option value="Neurology">Neurology</option>
+                                <option value="Psychiatry">Psychiatry</option>
+                                <option value="Dentistry">Dentistry</option>
+                                <option value="Ophthalmology">Ophthalmology</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Availability</label>
+                            <select id="availability-filter" class="form-control">
+                                <option value="all">All Doctors</option>
+                                <option value="available">Available Now</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="applyFilters()">Search</button>
+                    </div>
+                </div>
+
+                <div class="doctor-grid">
+                    <% if (doctors.length > 0) { %>
+                        <% doctors.forEach(doctor => { %>
+                            <div class="doctor-card" data-specialization="<%= doctor.specialization %>">
+                                <div class="doctor-header">
+                                    <div class="doctor-avatar">
+                                        <%= doctor.full_name.split(' ').map(n => n[0]).join('').toUpperCase() %>
+                                    </div>
+                                    <div class="doctor-info">
+                                        <h3><%= doctor.full_name %></h3>
+                                        <p class="doctor-specialty"><%= doctor.specialization %></p>
+                                        <p class="doctor-experience"><%= doctor.experience_years %>+ years experience</p>
+                                        <div class="doctor-rating">
+                                            <span class="stars">★★★★★</span>
+                                            <span>(<%= doctor.review_count || 0 %> reviews)</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="doctor-details">
+                                    <div class="detail-item">
+                                        <span class="detail-icon">🏥</span>
+                                        <span><%= doctor.hospital_affiliation || 'Multiple Hospitals' %></span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-icon">💰</span>
+                                        <span>₹<%= doctor.consultation_fee %> consultation fee</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-icon">📞</span>
+                                        <span><%= doctor.phone %></span>
+                                    </div>
+                                </div>
+
+                                <div class="doctor-actions">
+                                    <% if (doctor.is_available) { %>
+                                        <span class="availability-badge">Available</span>
+                                        <button class="btn btn-primary book-appointment" data-doctor-id="<%= doctor.id %>">
+                                            Book Appointment
+                                        </button>
+                                    <% } else { %>
+                                        <span class="availability-badge unavailable">Not Available</span>
+                                        <button class="btn btn-outline" disabled>Not Available</button>
+                                    <% } %>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="no-doctors" style="text-align: center; padding: 60px 40px;">
+                            <h3>No Doctors Found</h3>
+                            <p>Try adjusting your search filters or check back later.</p>
+                        </div>
+                    <% } %>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Booking Modal -->
+    <div class="booking-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Book Appointment</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            
+            <form id="booking-form">
+                <input type="hidden" id="doctor_id" name="doctor_id">
+                
+                <div class="form-group">
+                    <label class="form-label">Doctor</label>
+                    <p id="modal-doctor-name" class="form-control" style="background: #f8f9fa; padding: 12px;"></p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Appointment Date & Time</label>
+                    <input type="datetime-local" id="appointment_date" name="appointment_date" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Describe Your Symptoms</label>
+                    <textarea id="symptoms" name="symptoms" class="form-control" rows="4" placeholder="Please describe your symptoms in detail..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Get Preliminary Analysis</label>
+                    <button type="button" id="diagnose-btn" class="btn btn-outline" style="width: 100%; margin-bottom: 16px;">
+                        Analyze Symptoms
+                    </button>
+                    <div id="diagnosis-result" class="diagnosis-result" style="display: none;"></div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Book Appointment</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/navbar/navbar.js"></script>
+    <script src="/patient/dashboard.js"></script>
+    
+    <script>
+        // Filter functionality
+        function applyFilters() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const specialization = document.getElementById('specialization-filter').value;
+            const availability = document.getElementById('availability-filter').value;
+            
+            const doctorCards = document.querySelectorAll('.doctor-card');
+            
+            doctorCards.forEach(card => {
+                const doctorName = card.querySelector('h3').textContent.toLowerCase();
+                const doctorSpecialization = card.dataset.specialization;
+                const isAvailable = card.querySelector('.availability-badge').textContent === 'Available';
+                
+                let show = true;
+                
+                if (searchTerm && !doctorName.includes(searchTerm)) {
+                    show = false;
+                }
+                
+                if (specialization && doctorSpecialization !== specialization) {
+                    show = false;
+                }
+                
+                if (availability === 'available' && !isAvailable) {
+                    show = false;
+                }
+                
+                card.style.display = show ? 'block' : 'none';
+            });
+        }
+
+        // Initialize search functionality
+        document.getElementById('search-input').addEventListener('input', applyFilters);
+        document.getElementById('specialization-filter').addEventListener('change', applyFilters);
+        document.getElementById('availability-filter').addEventListener('change', applyFilters);
+
+        // Modal functionality
+        const bookButtons = document.querySelectorAll('.book-appointment');
+        const bookingModal = document.querySelector('.booking-modal');
+        const closeModal = document.querySelector('.close-modal');
+
+        bookButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const doctorId = e.target.dataset.doctorId;
+                const doctorCard = e.target.closest('.doctor-card');
+                const doctorName = doctorCard.querySelector('h3').textContent;
+                
+                document.getElementById('modal-doctor-name').textContent = doctorName;
+                document.getElementById('doctor_id').value = doctorId;
+                
+                // Set minimum date to today
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('appointment_date').min = today + 'T00:00';
+                
+                bookingModal.classList.add('active');
+            });
+        });
+
+        closeModal.addEventListener('click', () => {
+            bookingModal.classList.remove('active');
+        });
+
+        bookingModal.addEventListener('click', (e) => {
+            if (e.target === bookingModal) {
+                bookingModal.classList.remove('active');
+            }
+        });
+
+        // Diagnosis functionality
+        document.getElementById('diagnose-btn').addEventListener('click', async function() {
+            const symptoms = document.getElementById('symptoms').value.trim();
+            const diagnoseBtn = this;
+            const diagnosisResult = document.getElementById('diagnosis-result');
+            
+            if (!symptoms) {
+                alert('Please describe your symptoms first');
+                return;
+            }
+
+            diagnoseBtn.disabled = true;
+            diagnoseBtn.textContent = 'Analyzing...';
+
+            try {
+                // Simulate API call to ML service
+                const response = await fetch('/api/diagnose', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ symptoms })
+                });
+
+                const result = await response.json();
+                
+                diagnosisResult.innerHTML = `
+                    <h4>Preliminary Analysis</h4>
+                    <p><strong>Possible Condition:</strong> ${result.diagnosis}</p>
+                    <p><strong>Recommendation:</strong> ${result.recommendation}</p>
+                    ${result.severity === 'high' ? 
+                        '<div class="alert alert-error" style="margin-top: 10px;">Please consult a doctor immediately</div>' : 
+                        ''}
+                `;
+                diagnosisResult.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Diagnosis error:', error);
+                diagnosisResult.innerHTML = `
+                    <div class="alert alert-error">
+                        Error analyzing symptoms. Please proceed with booking and discuss with the doctor.
+                    </div>
+                `;
+                diagnosisResult.style.display = 'block';
+            } finally {
+                diagnoseBtn.disabled = false;
+                diagnoseBtn.textContent = 'Analyze Symptoms';
+            }
+        });
+
+        // Form submission
+        document.getElementById('booking-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch('/patient/book-appointment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Appointment booked successfully!');
+                    bookingModal.classList.remove('active');
+                    window.location.href = '/patient/appointments';
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Booking error:', error);
+                alert('Error booking appointment. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>

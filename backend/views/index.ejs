@@ -1,0 +1,11 @@
+<% if (user) { %>
+    <% if (user.role === 'patient') { %>
+        <%- include('./patient/dashboard') %>
+    <% } else if (user.role === 'doctor') { %>
+        <%- include('./doctor/dashboard') %>
+    <% } else { %>
+        <%- include('./launchpage/launchpagehome') %>
+    <% } %>
+<% } else { %>
+    <%- include('./launchpage/launchpagehome') %>
+<% } %>

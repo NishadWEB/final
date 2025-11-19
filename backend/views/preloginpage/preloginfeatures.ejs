@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Features - MediDiag</title>
+    <link rel="stylesheet" href="/main/main.css">
+    <link rel="stylesheet" href="/navbar/navbar.css">
+    <link rel="stylesheet" href="/features/features.css">
+</head>
+<body>
+    <%- include('../headers/preloginheader') %>
+    
+    <section class="features-hero">
+        <div class="container">
+            <h1>MediDiag Features</h1>
+            <p>Discover our platform features</p>
+        </div>
+    </section>
+
+    <section class="features-content">
+        <div class="container">
+            <!-- Same features content as launchpage/features.ejs -->
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="icon">🔍</div>
+                    <h3>Symptom Checker</h3>
+                    <p>AI-powered preliminary diagnosis</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">👨‍⚕️</div>
+                    <h3>Doctor Network</h3>
+                    <p>Connect with healthcare professionals</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <%- include('../main/footer') %>
+</body>
+</html>

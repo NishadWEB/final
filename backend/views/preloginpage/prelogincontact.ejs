@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact - MediDiag</title>
+    <link rel="stylesheet" href="/main/main.css">
+    <link rel="stylesheet" href="/navbar/navbar.css">
+    <link rel="stylesheet" href="/contact/contact.css">
+</head>
+<body>
+    <%- include('../headers/preloginheader') %>
+    
+    <section class="contact-hero">
+        <div class="container">
+            <h1>Contact Us</h1>
+            <p>Get in touch with our team</p>
+        </div>
+    </section>
+
+    <section class="contact-content">
+        <div class="container">
+            <!-- Same content as launchpage/contact.ejs -->
+            <div class="contact-grid">
+                <div class="contact-info">
+                    <h2>Get In Touch</h2>
+                    <div class="contact-method">
+                        <div class="contact-icon">✉️</div>
+                        <div>
+                            <h3>Email Us</h3>
+                            <p>medi.diag@gmail.com</p>
+                        </div>
+                    </div>
+                    <div class="contact-method">
+                        <div class="contact-icon">📞</div>
+                        <div>
+                            <h3>Call Us</h3>
+                            <p>+91 1234567891</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-form">
+                    <h2>Send us a Message</h2>
+                    <form>
+                        <div class="form-group">
+                            <label class="form-label">Your Message</label>
+                            <textarea class="form-control" rows="6" placeholder="Tell us how we can help you..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <%- include('../main/footer') %>
+</body>
+</html>

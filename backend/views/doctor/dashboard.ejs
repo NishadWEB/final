@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/main/main.css">
+    <link rel="stylesheet" href="/navbar/navbar.css">
+    <link rel="stylesheet" href="/doctor/dashboard.css">
+</head>
+<body>
+    <%- include('../headers/preloginheader') %>
+    
+    <div class="container doctor-dashboard">
+        <div class="dashboard-grid">
+            <aside class="sidebar">
+                <nav class="sidebar-nav">
+                    <ul>
+                        <li><a href="/doctor/dashboard" class="active">Dashboard</a></li>
+                        <li><a href="/doctor/appointments">Appointments</a></li>
+                        <li><a href="/doctor/profile">Profile</a></li>
+                        <li><a href="/auth/logout">Logout</a></li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <main class="dashboard-content">
+                <h1>Welcome, Dr. <%= doctor ? doctor.full_name : 'Doctor' %></h1>
+
+                <div class="stats">
+                    <div class="stat-card">
+                        <h3>Total Appointments</h3>
+                        <p><%= stats ? stats.total : 0 %></p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Pending</h3>
+                        <p><%= stats ? stats.pending : 0 %></p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Completed</h3>
+                        <p><%= stats ? stats.completed : 0 %></p>
+                    </div>
+                </div>
+
+                <section class="recent-appointments">
+                    <h2>Recent Appointments</h2>
+                    <% if (appointments && appointments.length > 0) { %>
+                        <ul class="appointment-list">
+                            <% appointments.forEach(a => { %>
+                                <li>
+                                    <strong><%= a.patient_name || a.patient_name %></strong>
+                                    <span><%= new Date(a.appointment_date).toLocaleString() %></span>
+                                    <span class="status status-<%= a.status %>"><%= a.status %></span>
+                                </li>
+                            <% }) %>
+                        </ul>
+                    <% } else { %>
+                        <p>No recent appointments.</p>
+                    <% } %>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="/navbar/navbar.js"></script>
+</body>
+</html>

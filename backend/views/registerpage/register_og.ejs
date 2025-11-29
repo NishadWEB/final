@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - MediDiag</title>
+    <title><%= title %></title>
     <link rel="stylesheet" href="/main/main.css">
     <link rel="stylesheet" href="/navbar/navbar.css">
     <link rel="stylesheet" href="/register/register.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <%- include('../headers/preloginheader') %>
-    
-    <div class="container">
-        <div class="register-content">
-            <div class="register-form">
+    <%- include('../headers/launchheader') %>
+     <div class="medical-background"></div>
+    <section class="register-hero">
+    <div class="register-container">
+        <form class="register-form" id="register-form">
                 <div class="form-header">
                     <h1>Create Your Account</h1>
                     <p>Join thousands of patients and doctors using MediDiag</p>
@@ -27,21 +28,31 @@
 
                 <form id="register-form" action="/auth/register" method="POST">
                     <div class="role-selection">
-                        <div class="role-option">
-                            <input type="radio" id="role-patient" name="role" value="patient" required>
-                            <label for="role-patient" class="role-label">
-                                <span class="role-icon">👤</span>
-                                Patient
-                            </label>
-                        </div>
-                        <div class="role-option">
-                            <input type="radio" id="role-doctor" name="role" value="doctor" required>
-                            <label for="role-doctor" class="role-label">
-                                <span class="role-icon">👨‍⚕️</span>
-                                Doctor
-                            </label>
-                        </div>
+                    <div class="role-option">
+                        <input type="radio" id="patient" name="role" value="patient" 
+                               <%= (typeof role !== 'undefined' && role === 'patient') ? 'checked' : '' %>>
+                                <%= (typeof role !== 'undefined' && role) ? 'disabled' : '' %>>
+                        <label for="patient" class="role-label">
+                            <span class="role-icon">👤</span>
+                            Patient
+                        </label>
                     </div>
+                        <div class="role-option">
+                        <input type="radio" id="doctor" name="role" value="doctor"
+                               <%= (typeof role !== 'undefined' && role === 'doctor') ? 'checked' : '' %>>
+                                <%= (typeof role !== 'undefined' && role) ? 'disabled' : '' %>>
+                        <label for="doctor" class="role-label">
+                            <span class="role-icon">👨‍⚕️</span>
+                            Doctor
+                        </label>
+                    </div>
+                    <% if (typeof role !== 'undefined' && role) { %>
+                        <div class="role-locked-message">
+                            <i class="fas fa-lock"></i>
+                            <span>Role locked as <%= role %>. <a href="/" class="change-role-link">Go back to change role</a></span>
+                        </div>
+                    <% } %>
+                </div>
 
                     <div class="form-group">
                         <label class="form-label">Full Name</label>
@@ -94,7 +105,14 @@
                     <div class="doctor-field" style="display: none;">
                         <div class="form-group">
                             <label class="form-label">Specialization</label>
-                            <input type="text" name="specialization" class="form-control" placeholder="e.g., Cardiology, Pediatrics">
+                            <select id="specialization" name="specialization" class="form-control">
+                            <option value="">Select Specialization</option>
+                            <option value="cardiology">Cardiology</option>
+                            <option value="neurology">Neurology</option>
+                            <option value="pediatrics">Pediatrics</option>
+                            <option value="surgery">Surgery</option>
+                            <option value="internal_medicine">Internal Medicine</option>
+                        </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label">License Number</label>
@@ -110,7 +128,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Consultation Fee (₹)</label>
-                            <input type="number" name="consultation_fee" class="form-control" min="0" step="0.01">
+                            <input type="number" name="consultation_fee" class="form-control" min="50" step="50">
                         </div>
                     </div>
 
@@ -122,9 +140,28 @@
                 </div>
             </div>
         </div>
+    </form>
     </div>
-
+    </section>
     <script src="/navbar/navbar.js"></script>
     <script src="/register/register.js"></script>
+    <script>
+        // Add medical background icons for register page
+        document.addEventListener('DOMContentLoaded', function() {
+            const medicalBackground = document.querySelector('.medical-background');
+            if (medicalBackground) {
+                const medicalIcons = ['❤️', '🩺', '💊', '🏥', '👤', '👨‍⚕️'];
+                medicalIcons.forEach((icon, index) => {
+                    const medicalIcon = document.createElement('div');
+                    medicalIcon.className = 'medical-icon';
+                    medicalIcon.textContent = icon;
+                    medicalIcon.style.animationDelay = `${index * 2}s`;
+                    medicalIcon.style.left = `${Math.random() * 90}%`;
+                    medicalIcon.style.top = `${Math.random() * 90}%`;
+                    medicalBackground.appendChild(medicalIcon);
+                });
+            }
+        });
+    </script>
 </body>
 </html>

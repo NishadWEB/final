@@ -7,40 +7,175 @@
     <link rel="stylesheet" href="/main/main.css">
     <link rel="stylesheet" href="/navbar/navbar.css">
     <link rel="stylesheet" href="/homepage/prelogin.css">
+    <link rel="stylesheet" href="/footer/footer.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <%- include('../headers/preloginheader') %>
     
-    <section class="prelogin-hero">
-        <div class="container">
-            <div class="hero-content">
-                <h1>Your Health Journey Starts Here</h1>
-                <p class="hero-quote">"Every great healthcare journey begins with a single step - and you've just taken it. Your wellbeing is our shared priority, and we're here to walk this path with you."</p>
-                
-                <div class="portal-selection">
-                    <div class="portal-card" data-role="patient">
-                        <div class="portal-icon">👤</div>
-                        <h2>Patient Portal</h2>
-                        <p>Access preliminary diagnosis, book appointments with doctors, and manage your health records securely.</p>
-                        <a href="/auth/login?role=patient" class="btn btn-primary">Login as Patient</a>
-                        <a href="/auth/register?role=patient" class="btn btn-outline">Register as Patient</a>
-                    </div>
+    <!-- Medical Background Elements -->
+    <div class="medical-background"></div>
 
-                    <div class="portal-card" data-role="doctor">
-                        <div class="portal-icon">👨‍⚕️</div>
-                        <h2>Doctor Portal</h2>
-                        <p>Manage your practice, consult with patients, and access professional tools for healthcare delivery.</p>
-                        <a href="/auth/login?role=doctor" class="btn btn-primary">Login as Doctor</a>
-                        <a href="/auth/register?role=doctor" class="btn btn-outline">Register as Doctor</a>
+    <main>
+        <!-- Hero Section -->
+        <section class="prelogin-hero">
+            <div class="container">
+                <div class="hero-content">
+                    <h1 class="animate-fade-in-up">Your Health Journey Starts Here</h1>
+                    <p class="hero-quote animate-fade-in-up" style="animation-delay: 0.2s;">
+                        "Every great healthcare journey begins with a single step - and you've just taken it. Your wellbeing is our shared priority, and we're here to walk this path with you."
+                    </p>
+                    
+                    <div class="portal-selection">
+                        <div class="portal-card animate-on-scroll" data-role="patient">
+                            <div class="portal-icon">
+                                <i class="fas fa-user-injured"></i>
+                            </div>
+                            <h2>Patient Portal</h2>
+                            <p>Access preliminary diagnosis, book appointments with doctors, and manage your health records securely.</p>
+                            <div class="portal-buttons">
+                                <a href="/auth/login?role=patient" class="btn btn-primary">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                    Login as Patient
+                                </a>
+                                <a href="/auth/register?role=patient" class="btn btn-outline">
+                                    <i class="fas fa-user-plus"></i>
+                                    Register as Patient
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="portal-card animate-on-scroll" data-role="doctor">
+                            <div class="portal-icon">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                            <h2>Doctor Portal</h2>
+                            <p>Manage your practice, consult with patients, and access professional tools for healthcare delivery.</p>
+                            <div class="portal-buttons">
+                                <a href="/auth/login?role=doctor" class="btn btn-primary">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                    Login as Doctor
+                                </a>
+                                <a href="/auth/register?role=doctor" class="btn btn-outline">
+                                    <i class="fas fa-user-plus"></i>
+                                    Register as Doctor
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+
+        <!-- Features Section -->
+        <section class="feature-highlight">
+            <div class="container">
+                <div class="section-title">
+                    <h2>Why Choose MediDiag?</h2>
+                    <p>Experience the future of healthcare with our advanced platform features</p>
+                </div>
+                <div class="feature-grid">
+                    <div class="feature-item animate-on-scroll">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>Military-Grade Security</h3>
+                        <p>Your medical data is encrypted with bank-level security and protected by strict HIPAA-compliant privacy controls.</p>
+                    </div>
+                    <div class="feature-item animate-on-scroll">
+                        <div class="feature-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <h3>Instant AI Analysis</h3>
+                        <p>Get preliminary assessments in seconds with our advanced machine learning algorithms trained on medical data.</p>
+                    </div>
+                    <div class="feature-item animate-on-scroll">
+                        <div class="feature-icon">
+                            <i class="fas fa-stethoscope"></i>
+                        </div>
+                        <h3>Verified Experts</h3>
+                        <p>Connect with board-certified healthcare professionals across 50+ medical specialties.</p>
+                    </div>
+                    <div class="feature-item animate-on-scroll">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h3>Seamless Experience</h3>
+                        <p>Access full platform functionality on any device with our responsive, user-friendly interface.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section class="process-section">
+            <div class="container">
+                <div class="section-title">
+                    <h2>How MediDiag Works</h2>
+                    <p>Simple steps to better healthcare with AI assistance</p>
+                </div>
+                <div class="process-steps">
+                    <div class="process-step animate-on-scroll">
+                        <div class="step-number">1</div>
+                        <div class="step-icon">
+                            <i class="fas fa-syringe"></i>
+                        </div>
+                        <h3>Describe Symptoms</h3>
+                        <p>Enter your symptoms and medical history through our intuitive interface</p>
+                    </div>
+                    <div class="process-step animate-on-scroll">
+                        <div class="step-number">2</div>
+                        <div class="step-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <h3>AI Analysis</h3>
+                        <p>Our AI analyzes your inputs and provides preliminary assessment</p>
+                    </div>
+                    <div class="process-step animate-on-scroll">
+                        <div class="step-number">3</div>
+                        <div class="step-icon">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <h3>Doctor Review</h3>
+                        <p>Verified healthcare professionals review and validate the AI analysis</p>
+                    </div>
+                    <div class="process-step animate-on-scroll">
+                        <div class="step-number">4</div>
+                        <div class="step-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <h3>Get Treatment</h3>
+                        <p>Book appointments, get prescriptions, and receive ongoing care</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <div class="container">
+                <div class="cta-content">
+                    <h2>Ready to Transform Your Healthcare Experience?</h2>
+                    <p>Join over 100+ patients and 50+ healthcare providers already using MediDiag platform</p>
+                    <div class="cta-buttons">
+                        <a href="/auth/register" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i>
+                            Sign Up Free
+                        </a>
+                        <a href="/about" class="btn btn-outline">
+                            <i class="fas fa-info-circle"></i>
+                            Learn More
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
 
     <%- include('../main/footer') %>
     
     <script src="/navbar/navbar.js"></script>
+    <script src="/homepage/launchpage.js"></script>
     <script src="/scrollbutton/scrollbutton.js"></script>
 </body>
 </html>

@@ -6,6 +6,7 @@
     <title>My Profile - MediDiag</title>
     <link rel="stylesheet" href="/main/main.css">
     <link rel="stylesheet" href="/navbar/navbar.css">
+    <link rel="stylesheet" href="/doctor/dashboard.css">
 </head>
 <body>
     <%- include('../headers/preloginheader') %>
@@ -33,11 +34,11 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">Full Name</label>
-                                    <input type="text" name="full_name" class="form-control" value="<%= doctor.full_name %>" required>
+                                    <input type="text" name="full_name" class="form-control" value="<%= (doctor && doctor.full_name) || '' %>" required>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Email</label>
-                                    <input type="email" class="form-control" value="<%= doctor.email %>" disabled>
+                                    <input type="email" class="form-control" value="<%= (doctor && doctor.email) || user.email || '' %>" disabled>
                                     <small>Contact support to change email</small>
                                 </div>
                             </div>
@@ -45,33 +46,33 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">Specialization</label>
-                                    <input type="text" name="specialization" class="form-control" value="<%= doctor.specialization %>" required>
+                                    <input type="text" name="specialization" class="form-control" value="<%= (doctor && doctor.specialization) || '' %>" required>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">License Number</label>
-                                    <input type="text" name="license_number" class="form-control" value="<%= doctor.license_number %>" required>
+                                    <input type="text" name="license_number" class="form-control" value="<%= (doctor && doctor.license_number) || '' %>" required>
                                 </div>
                             </div>
 
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">Years of Experience</label>
-                                    <input type="number" name="experience_years" class="form-control" value="<%= doctor.experience_years %>" min="0">
+                                    <input type="number" name="experience_years" class="form-control" value="<%= (doctor && doctor.experience_years) || '' %>" min="0">
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Consultation Fee (₹)</label>
-                                    <input type="number" name="consultation_fee" class="form-control" value="<%= doctor.consultation_fee %>" min="0" step="0.01">
+                                    <input type="number" name="consultation_fee" class="form-control" value="<%= (doctor && doctor.consultation_fee) || '' %>" min="0" step="0.01">
                                 </div>
                             </div>
 
                             <div class="form-group">
                                 <label class="form-label">Hospital Affiliation</label>
-                                <input type="text" name="hospital_affiliation" class="form-control" value="<%= doctor.hospital_affiliation %>">
+                                <input type="text" name="hospital_affiliation" class="form-control" value="<%= (doctor && doctor.hospital_affiliation) || '' %>">
                             </div>
 
                             <div class="form-group">
                                 <label class="form-label">Phone Number</label>
-                                <input type="tel" name="phone" class="form-control" value="<%= doctor.phone %>">
+                                <input type="tel" name="phone" class="form-control" value="<%= (doctor && doctor.phone) || '' %>">
                             </div>
 
                             <button type="submit" class="btn btn-primary">Update Profile</button>

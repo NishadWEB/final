@@ -6,13 +6,19 @@
     <title><%= title %></title>
     <link rel="stylesheet" href="/main/main.css">
     <link rel="stylesheet" href="/navbar/navbar.css">
+    <link rel="stylesheet" href="/login/login.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
     <%- include('../headers/launchheader') %>
     
-    <div class="container">
-        <div class="register-content">
-            <div class="register-form">
+    <!-- Medical Background Elements -->
+    <div class="medical-background"></div>
+
+    <!-- Login Section -->
+    <section class="login-hero">
+        <div class="login-container">
+            <form class="login-form" action="/auth/login" method="POST">
                 <div class="form-header">
                     <h1>Welcome Back</h1>
                     <p>Sign in to your MediDiag account</p>
@@ -24,25 +30,42 @@
                     </div>
                 <% } %>
 
-                <form action="/auth/login" method="POST">
-                    <div class="form-group">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" name="email" class="form-control" required>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Password</label>
-                        <input type="password" name="password" class="form-control" required>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
 
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
-                </form>
+                <button type="submit" class="btn btn-primary">Sign In</button>
 
                 <div class="form-footer">
                     <p>Don't have an account? <a href="/auth/register">Sign up here</a></p>
                 </div>
-            </div>
+            </form>
         </div>
-    </div>
+    </section>
+
+    <script>
+        // Add medical background icons for login page
+        document.addEventListener('DOMContentLoaded', function() {
+            const medicalBackground = document.querySelector('.medical-background');
+            if (medicalBackground) {
+                const medicalIcons = ['❤️', '🩺', '💊', '🏥', '👤', '🔒'];
+                medicalIcons.forEach((icon, index) => {
+                    const medicalIcon = document.createElement('div');
+                    medicalIcon.className = 'medical-icon';
+                    medicalIcon.textContent = icon;
+                    medicalIcon.style.animationDelay = `${index * 2}s`;
+                    medicalIcon.style.left = `${Math.random() * 90}%`;
+                    medicalIcon.style.top = `${Math.random() * 90}%`;
+                    medicalBackground.appendChild(medicalIcon);
+                });
+            }
+        });
+    </script>
 </body>
 </html>

@@ -6,6 +6,7 @@
     <title>Appointments - MediDiag</title>
     <link rel="stylesheet" href="/main/main.css">
     <link rel="stylesheet" href="/navbar/navbar.css">
+    <link rel="stylesheet" href="/doctor/dashboard.css">
 </head>
 <body>
     <%- include('../headers/preloginheader') %>
@@ -59,10 +60,10 @@
                                 
                                 <div class="appointment-actions">
                                     <% if (appointment.status === 'scheduled') { %>
-                                        <button class="btn btn-primary" onclick="viewAppointment(<%= appointment.id %>)">View Details</button>
-                                        <button class="btn btn-outline" onclick="completeAppointment(<%= appointment.id %>)">Mark Complete</button>
+                                        <button class="btn btn-primary" data-id="<%= appointment.id %>" onclick="viewAppointment(this.dataset.id)">View Details</button>
+                                        <button class="btn btn-outline" data-id="<%= appointment.id %>" onclick="completeAppointment(this.dataset.id)">Mark Complete</button>
                                     <% } else if (appointment.status === 'completed') { %>
-                                        <button class="btn btn-outline" onclick="viewAppointment(<%= appointment.id %>)">View Details</button>
+                                        <button class="btn btn-outline" data-id="<%= appointment.id %>" onclick="viewAppointment(this.dataset.id)">View Details</button>
                                     <% } %>
                                 </div>
                             </div>

@@ -15,8 +15,10 @@ const requirePatient = (req, res, next) => {
 router.get('/dashboard', requirePatient, patientController.getDashboard);
 router.get('/doctors', requirePatient, patientController.getDoctors);
 router.get('/appointments', requirePatient, patientController.getAppointments);
-router.post('/book-appointment', requirePatient, patientController.bookAppointment);
 router.get('/profile', requirePatient, patientController.getProfile);
+
+router.post('/book-appointment', requirePatient, patientController.bookAppointment);
+router.post('/cancel-appointment', requirePatient, patientController.cancelAppointment);
 router.post('/profile', requirePatient, patientController.updateProfile);
 
 // Chat endpoints (simple MVP)

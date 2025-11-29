@@ -1,20 +1,41 @@
-.doctors-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 60px 0;
+/* Doctors Page Specific Styles */
+.welcome-section {
   text-align: center;
+  margin-bottom: 40px;
+  padding: 40px;
+  background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-light) 100%);
+  border-radius: 16px;
+  border: 3px solid rgba(59, 130, 246, 0.2);
 }
 
-.doctors-content {
-  padding: 60px 0;
+.welcome-section h1 {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+  color: var(--text-lighter);
+  background: linear-gradient(135deg, var(--text-lighter) 0%, var(--medical-teal) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
 }
 
+.welcome-section p {
+  color: var(--text-light);
+  font-size: 1.1rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Search & Filters */
 .search-filters {
-  background: var(--white);
+  background: var(--bg-dark);
   padding: 30px;
   border-radius: 12px;
-  box-shadow: var(--shadow);
-  margin-bottom: 40px;
+  border: 2px solid var(--border-color);
+  margin-bottom: 50px;
 }
 
 .filter-row {
@@ -24,68 +45,90 @@
   align-items: end;
 }
 
-@media (max-width: 768px) {
-  .filter-row {
-    grid-template-columns: 1fr;
-  }
+.filter-row .form-group {
+  margin-bottom: 0;
 }
 
+/* Doctors Grid */
 .doctor-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
   gap: 30px;
 }
 
 .doctor-card {
-  background: var(--white);
+  background: var(--bg-dark);
   border-radius: 12px;
   padding: 30px;
-  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
   transition: all 0.3s ease;
   position: relative;
+  overflow: hidden;
+}
+
+.doctor-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+  transition: left 0.6s ease;
+}
+
+.doctor-card:hover::before {
+  left: 100%;
 }
 
 .doctor-card:hover {
   transform: translateY(-5px);
-  box-shadow: var(--shadow-lg);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: var(--shadow-medical);
 }
 
 .doctor-header {
   display: flex;
   align-items: flex-start;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
 
 .doctor-avatar {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: var(--primary-color);
-  color: white;
+  background: var(--gradient-medical);
+  color: var(--text-lighter);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: bold;
   margin-right: 20px;
   flex-shrink: 0;
+  box-shadow: var(--shadow-medical);
 }
 
 .doctor-info h3 {
+  color: var(--text-lighter);
   margin-bottom: 8px;
-  color: var(--text-dark);
+  font-size: 1.2rem;
 }
 
 .doctor-specialty {
-  color: var(--primary-color);
+  color: var(--medical-blue);
   font-weight: 600;
   margin-bottom: 8px;
+  font-size: 1.1rem;
 }
 
 .doctor-experience {
   color: var(--text-light);
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .doctor-rating {
@@ -97,39 +140,99 @@
 
 .stars {
   color: #fbbf24;
+  font-size: 1rem;
+}
+
+.doctor-rating span:last-child {
+  color: var(--text-dark);
+  font-size: 0.85rem;
 }
 
 .doctor-details {
   margin-bottom: 20px;
+  padding: 20px 0;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .detail-item {
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   color: var(--text-light);
+  font-size: 1rem;
+}
+
+.detail-item:last-child {
+  margin-bottom: 0;
 }
 
 .detail-icon {
   width: 20px;
-  margin-right: 8px;
+  margin-right: 10px;
   text-align: center;
+  color: var(--medical-blue);
+}
+
+.doctor-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
 }
 
 .availability-badge {
-  display: inline-block;
-  padding: 4px 12px;
-  background: #10b981;
-  color: white;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 10px;
+  background: var(--medical-green);
+  color: var(--text-lighter);
   border-radius: 20px;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 600;
 }
 
-.unavailable {
+.availability-badge.unavailable {
   background: #ef4444;
 }
 
+.doctor-actions .btn {
+  flex: 1;
+  padding: 18px 18px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* No Doctors State */
+.no-doctors {
+  text-align: center;
+  padding: 60px 40px;
+  color: var(--text-dark);
+  grid-column: 1 / -1;
+}
+
+.no-doctors i {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.no-doctors h3 {
+  color: var(--text-light);
+  margin-bottom: 10px;
+  font-size: 1.5rem;
+}
+
+.no-doctors p {
+  margin-bottom: 20px;
+  font-size: 1rem;
+}
+
+/* Booking Modal */
 .booking-modal {
   display: none;
   position: fixed;
@@ -137,10 +240,11 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(46, 46, 80, 0.923);
   z-index: 1000;
   align-items: center;
   justify-content: center;
+  padding: 50px;
 }
 
 .booking-modal.active {
@@ -148,52 +252,338 @@
 }
 
 .modal-content {
-  background: var(--white);
-  border-radius: 12px;
+  background: var(--bg-lighter);
+  border-radius: 16px;
   padding: 40px;
   max-width: 500px;
-  width: 90%;
+  width: 100%;
   max-height: 90vh;
   overflow-y: auto;
+  border: 3px solid var(--border-color);
+  box-shadow: var(--shadow-strong);
+  position: relative;
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 3px solid var(--border-color);
+}
+
+.modal-header h2 {
+  color: var(--text-lighter);
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 
 .close-modal {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 2rem;
   cursor: pointer;
+  color: var(--text-light);
+  transition: color 0.3s ease;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.close-modal:hover {
+  color: var(--text-lighter);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+#booking-form .form-group {
+  margin-bottom: 30px;
+}
+
+#modal-doctor-name {
+  background: var(--bg-dark);
+  border: 1px solid var(--border-color);
+  color: var(--text-lighter);
+  font-weight: 600;
+  margin: 0;
+}
+
+.symptom-helper {
+  margin-top: 30px;
+  padding: 30px;
+  background: var(--bg-dark);
+  border-radius: 8px;
+  border: 3px solid var(--border-color);
+}
+
+.symptom-helper small {
+  color: var(--text-dark);
+  display: block;
+  margin-bottom: 30px;
+}
+
+.symptom-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin-bottom: 30px;
+}
+
+.symptom-list label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background 0.3s ease;
+  font-size: 0.85rem;
   color: var(--text-light);
 }
 
-.time-slots {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 10px;
-  margin: 16px 0;
+.symptom-list label:hover {
+  background: rgba(59, 130, 246, 0.1);
 }
 
-.time-slot {
-  padding: 12px;
-  border: 2px solid var(--border-color);
+.symptom-checkbox {
+  margin: 0;
+}
+
+.diagnosis-result {
+  margin-top: 15px;
+  padding: 30px;
+  background: var(--bg-dark);
   border-radius: 8px;
+  border: 3px solid var(--border-color);
+}
+
+.diagnosis-result h4 {
+  color: var(--text-lighter);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.2rem;
+}
+
+.confidence-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.confidence-high {
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--medical-green);
+}
+
+.confidence-medium {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.confidence-low {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .doctor-grid {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .filter-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .doctor-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .doctor-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 15px;
+  }
+  
+  .doctor-avatar {
+    margin-right: 0;
+  }
+  
+  .doctor-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .modal-content {
+    padding: 30px 25px;
+  }
+  
+  .symptom-list {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .welcome-section {
+    padding: 30px 20px;
+  }
+  
+  .welcome-section h1 {
+    font-size: 2rem;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .search-filters {
+    padding: 25px 20px;
+  }
+  
+  .doctor-card {
+    padding: 25px 20px;
+  }
+  
+  .modal-content {
+    padding: 25px 20px;
+  }
+  
+  .symptom-list {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.patient-dashboard {
+    margin-top: 80px !important;   /* Adjust value if you want more space */
+}
+/* ===== SIDEBAR — perfectly matching dashboard.css ===== */
+
+.sidebar {
+  background: var(--bg-lighter);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+  position: sticky;
+  top: 120px; /* matches dashboard */
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+  transition: all 0.25s ease;
+  z-index: 2;
+}
+
+/* Sidebar Header */
+.sidebar-header {
   text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  margin-bottom: 22px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
 }
 
-.time-slot:hover {
-  border-color: var(--primary-color);
+.user-avatar-large {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--gradient-medical);
+  color: var(--text-lighter);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0 auto 12px;
+  box-shadow: var(--shadow-medical);
 }
 
-.time-slot.selected {
-  background: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
+.sidebar-header h3 {
+  color: var(--text-lighter);
+  margin-bottom: 6px;
+  font-size: 1.5rem;
+}
+
+.sidebar-header p {
+  color: var(--text-dark);
+  font-size: 0.9rem;
+}
+
+/* NAV ITEMS */
+.sidebar-nav {
+  list-style: none;
+  padding: 10px;
+  margin: 0;
+}
+
+.sidebar-nav li {
+  margin-bottom: 8px;
+}
+
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  text-decoration: none;
+  color: var(--text-light);
+  border-radius: 10px;
+  transition: all 0.22s ease;
+  position: relative;
+  overflow: hidden;
+  font-weight: 500;
+  font-size: 1.2rem;
+}
+
+/* Sweep Hover Animation */
+.sidebar-nav a::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(59,130,246,0.08),
+    transparent
+  );
+  transition: left 0.45s ease;
+}
+
+.sidebar-nav a:hover::before,
+.sidebar-nav a.active::before {
+  left: 100%;
+}
+
+/* Active + Hover State */
+.sidebar-nav a:hover,
+.sidebar-nav a.active {
+  background: var(--gradient-medical);
+  color: var(--text-lighter);
+  transform: translateX(6px);
+  box-shadow: var(--shadow-medical);
+}
+
+/* Responsive — matches dashboard */
+@media (max-width: 1024px) {
+  .sidebar {
+    position: relative;
+    top: 0;
+    max-height: none;
+    margin-bottom: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    padding: 16px;
+  }
 }

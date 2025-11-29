@@ -7,12 +7,15 @@
     <link rel="stylesheet" href="/main/main.css">
     <link rel="stylesheet" href="/navbar/navbar.css">
     <link rel="stylesheet" href="/faqs/faqs.css">
+    <link rel="stylesheet" href="/footer/footer.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <%- include('../headers/launchheader') %>
-    
+     <div class="medical-background"></div>
+    <main>
     <section class="faqs-hero">
-        <div class="container">
+        <div class="faqs-hero-container">
             <h1>Frequently Asked Questions</h1>
             <p>Find answers to common questions about MediDiag and how our platform works</p>
         </div>
@@ -30,7 +33,7 @@
 
             <div class="faq-list">
                 <!-- General Questions -->
-                <div class="faq-item" data-category="general">
+                <div class="faq-item animate-on-scroll" data-category="general">
                     <div class="faq-question">
                         What is MediDiag and how does it work?
                         <span class="faq-icon">▼</span>
@@ -40,7 +43,7 @@
                     </div>
                 </div>
 
-                <div class="faq-item" data-category="general">
+                <div class="faq-item animate-on-scroll" data-category="general">
                     <div class="faq-question">
                         Is MediDiag a replacement for in-person doctor visits?
                         <span class="faq-icon">▼</span>
@@ -50,7 +53,7 @@
                     </div>
                 </div>
 
-                <div class="faq-item" data-category="general">
+                <div class="faq-item animate-on-scroll" data-category="general">
                     <div class="faq-question">
                         How accurate is the preliminary diagnosis?
                         <span class="faq-icon">▼</span>
@@ -61,7 +64,7 @@
                 </div>
 
                 <!-- Patient Questions -->
-                <div class="faq-item" data-category="patient">
+                <div class="faq-item animate-on-scroll" data-category="patient">
                     <div class="faq-question">
                         How do I create a patient account?
                         <span class="faq-icon">▼</span>
@@ -71,7 +74,7 @@
                     </div>
                 </div>
 
-                <div class="faq-item" data-category="patient">
+                <div class="faq-item animate-on-scroll" data-category="patient">
                     <div class="faq-question">
                         Is my medical information secure?
                         <span class="faq-icon">▼</span>
@@ -81,7 +84,7 @@
                     </div>
                 </div>
 
-                <div class="faq-item" data-category="patient">
+                <div class="faq-item animate-on-scroll" data-category="patient">
                     <div class="faq-question">
                         How much does it cost to use MediDiag?
                         <span class="faq-icon">▼</span>
@@ -91,7 +94,7 @@
                     </div>
                 </div>
 
-                <div class="faq-item" data-category="patient">
+                <div class="faq-item animate-on-scroll" data-category="patient">
                     <div class="faq-question">
                         Can I get prescriptions through MediDiag?
                         <span class="faq-icon">▼</span>
@@ -102,7 +105,7 @@
                 </div>
 
                 <!-- Doctor Questions -->
-                <div class="faq-item" data-category="doctor">
+                <div class="faq-item animate-on-scroll" data-category="doctor">
                     <div class="faq-question">
                         How do I join MediDiag as a healthcare provider?
                         <span class="faq-icon">▼</span>
@@ -112,7 +115,7 @@
                     </div>
                 </div>
 
-                <div class="faq-item" data-category="doctor">
+                <div class="faq-item animate-on-scroll" data-category="doctor">
                     <div class="faq-question">
                         What are the benefits for healthcare professionals?
                         <span class="faq-icon">▼</span>
@@ -122,7 +125,7 @@
                     </div>
                 </div>
 
-                <div class="faq-item" data-category="doctor">
+                <div class="faq-item animate-on-scroll" data-category="doctor">
                     <div class="faq-question">
                         How are payments processed?
                         <span class="faq-icon">▼</span>
@@ -132,7 +135,7 @@
                     </div>
                 </div>
 
-                <div class="faq-item" data-category="doctor">
+                <div class="faq-item animate-on-scroll" data-category="doctor">
                     <div class="faq-question">
                         Can I use my existing medical practice management software?
                         <span class="faq-icon">▼</span>
@@ -143,7 +146,7 @@
                 </div>
 
                 <!-- Technical Questions -->
-                <div class="faq-item" data-category="technical">
+                <div class="faq-item animate-on-scroll" data-category="technical">
                     <div class="faq-question">
                         What devices and browsers are supported?
                         <span class="faq-icon">▼</span>
@@ -153,7 +156,7 @@
                     </div>
                 </div>
 
-                <div class="faq-item" data-category="technical">
+                <div class="faq-item animate-on-scroll" data-category="technical">
                     <div class="faq-question">
                         What should I do if I'm experiencing technical issues?
                         <span class="faq-icon">▼</span>
@@ -163,7 +166,7 @@
                     </div>
                 </div>
 
-                <div class="faq-item" data-category="technical">
+                <div class="faq-item animate-on-scroll" data-category="technical">
                     <div class="faq-question">
                         Is there a mobile app available?
                         <span class="faq-icon">▼</span>
@@ -181,10 +184,13 @@
             </div>
         </div>
     </section>
+    </main>
 
     <%- include('../main/footer') %>
     
     <script src="/navbar/navbar.js"></script>
+    <script src="/homepage/launchpage.js"></script>
     <script src="/faqs/faqs.js"></script>
+    <script src="/scrollbutton/scrollbutton.js"></script>
 </body>
 </html>

@@ -2,36 +2,235 @@
     <div class="navbar-container">
         <a href="/" class="navbar-brand">MediDiag</a>
         
-        <button class="mobile-menu-btn">☰</button>
+        <button class="mobile-menu-btn" aria-label="Toggle menu">☰</button>
         
         <nav class="navbar-nav">
             <a href="/">Home</a>
             <a href="/about">About</a>
-            <a href="/features">Features</a>
-            <a href="/faqs">FAQs</a>
+            <a href="/features" >Features</a>
+            <a href="/faqs" >FAQs</a>
             <a href="/contact">Contact</a>
             
             <% if (user) { %>
                 <div class="user-menu">
-                    <a href="#">
-                        <% if (user.role === 'patient') { %>
-                            Patient Portal
-                        <% } else { %>
-                            Doctor Portal
-                        <% } %>
-                    </a>
+                    <div class="user-trigger">
+                        <div class="user-avatar">
+                            <%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %>
+                        </div>
+                     <span>
+                            <% if (user.role === 'patient') { %>
+                                Patient Portal
+                            <% } else { %>
+                                Doctor Portal
+                            <% } %>
+                        </span>
+                    </div>
                     <div class="user-dropdown">
-                        <a href="/<%= user.role %>/dashboard">Dashboard</a>
-                        <a href="/<%= user.role %>/profile">Profile</a>
-                        <a href="/auth/logout">Logout</a>
+                        <a href="/<%= user.role %>/dashboard"><i class="fas fa-tachometer-alt"></i>Dashboard</a>
+                        <a href="/<%= user.role %>/appointments"><i class="fas fa-tachometer-alt"></i>Appointments</a>
+                        <a href="/<%= user.role %>/profile"><i class="fas fa-user"></i>Profile</a>
+                        <a href="/auth/logout"><i class="fas fa-sign-out-alt"></i>Logout</a>
                     </div>
                 </div>
             <% } else { %>
                 <div class="navbar-actions">
-                    <a href="/auth/login" class="btn btn-outline">Login</a>
-                    <a href="/auth/register" class="btn btn-primary">Sign Up</a>
+                    <a href="/auth/login" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i>Login</a>
+                    <div class="signup-dropdown">
+                        <button id="header-signup" class="btn btn-outline signup-trigger">
+                            Sign Up <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="signup-dropdown-menu">
+                            <div class="signup-option-header">
+                                <h4>Choose Your Role</h4>
+                                <p>Select how you want to use MediDiag</p>
+                            </div>
+                            <div class="signup-options">
+                                <a href="/auth/register?role=patient" class="signup-option-btn">
+                                    <div class="signup-option-icon">👤</div>
+                                    <div class="signup-option-text">
+                                        <strong>Patient</strong>
+                                        <span>Get diagnosis & care</span>
+                                    </div>
+                                </a>
+                                <a href="/auth/register?role=doctor" class="signup-option-btn">
+                                    <div class="signup-option-icon">👨‍⚕️</div>
+                                    <div class="signup-option-text">
+                                        <strong>Doctor</strong>
+                                        <span>Provide care & consultations</span>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             <% } %>
         </nav>
     </div>
 </header>
+<style>
+/* Sign Up Dropdown Styles */
+.signup-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.signup-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.signup-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--bg-lighter);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+    z-index: 1000;
+    min-width: 280px;
+    margin-top: 10px;
+    animation: fadeInUp 0.3s ease;
+}
+
+.signup-dropdown-menu.show {
+    display: block;
+}
+
+.signup-option-header {
+    text-align: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.signup-option-header h4 {
+    color: var(--text-lighter);
+    margin-bottom: 5px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.signup-option-header p {
+    color: var(--text-dark);
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+.signup-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.signup-option-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-light);
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+    background: var(--bg-dark);
+}
+
+.signup-option-btn:hover {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: var(--medical-blue);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medical);
+}
+
+.signup-option-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-darker);
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.signup-option-text {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.signup-option-text strong {
+    color: var(--text-lighter);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.signup-option-text span {
+    font-size: 0.75rem;
+    color: var(--text-dark);
+    margin-top: 2px;
+}
+
+/* Dropdown animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .signup-dropdown-menu {
+        right: -50px;
+        min-width: 250px;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const signupTrigger = document.querySelector('.signup-trigger');
+    const signupDropdown = document.querySelector('.signup-dropdown-menu');
+    
+    if (signupTrigger && signupDropdown) {
+        // Toggle dropdown on click
+        signupTrigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            signupDropdown.classList.toggle('show');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!signupTrigger.contains(e.target) && !signupDropdown.contains(e.target)) {
+                signupDropdown.classList.remove('show');
+            }
+        });
+        
+        // Close dropdown when an option is selected
+        const signupOptions = document.querySelectorAll('.signup-option-btn');
+        signupOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                signupDropdown.classList.remove('show');
+            });
+        });
+        
+        // Close dropdown on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                signupDropdown.classList.remove('show');
+            }
+        });
+    }
+});
+</script>

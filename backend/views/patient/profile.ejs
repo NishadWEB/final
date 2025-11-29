@@ -5,31 +5,78 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile - MediDiag</title>
     <link rel="stylesheet" href="/main/main.css">
+    <link rel="stylesheet" href="/patient/appointments.css">
     <link rel="stylesheet" href="/navbar/navbar.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <%- include('../headers/preloginheader') %>
+    <%- include('../headers/launchheader') %>
     
+    <!-- Medical Background Elements -->
+    <div class="medical-background">
+        <i class="fas fa-heart medical-icon heart"></i>
+        <i class="fas fa-stethoscope medical-icon stethoscope"></i>
+        <i class="fas fa-pills medical-icon pill"></i>
+        <i class="fas fa-hospital medical-icon hospital"></i>
+        <i class="fas fa-user medical-icon user"></i>
+        <i class="fas fa-shield-alt medical-icon clipboard"></i>
+    </div>
+
     <div class="container patient-dashboard">
         <div class="dashboard-grid">
             <aside class="sidebar">
+                <div class="sidebar-header">
+                    <div class="user-avatar-large">
+                        <%= patient.full_name ? patient.full_name.charAt(0).toUpperCase() : 'P' %>
+                    </div>
+                    <h3><%= patient.full_name %></h3>
+                    <p>Patient ID: <%= patient.id %></p>
+                </div>
                 <nav class="sidebar-nav">
                     <ul>
-                        <li><a href="/patient/dashboard">Dashboard</a></li>
-                        <li><a href="/patient/doctors">Find Doctors</a></li>
-                        <li><a href="/patient/appointments">My Appointments</a></li>
-                        <li><a href="/patient/profile" class="active">Profile</a></li>
-                        <li><a href="/auth/logout">Logout</a></li>
+                        <li>
+                            <a href="/patient/dashboard">
+                                <i class="fas fa-tachometer-alt"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/patient/doctors">
+                                <i class="fas fa-user-md"></i>
+                                Find Doctors
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/patient/appointments">
+                                <i class="fas fa-calendar-check"></i>
+                                My Appointments
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/patient/profile" class="active">
+                                <i class="fas fa-user"></i>
+                                Profile
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/auth/logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Logout
+                            </a>
+                        </li>
                     </ul>
                 </nav>
             </aside>
 
             <main class="dashboard-content">
-                <h1>My Profile</h1>
+                <h1><i class="fas fa-user"></i> My Profile</h1>
                 
                 <div class="profile-section">
                     <div class="card">
-                        <h2>Personal Information</h2>
+                        <div class="section-header">
+                            <h2><i class="fas fa-user-circle"></i> Personal Information</h2>
+                            <p>Update your personal details and contact information</p>
+                        </div>
                         <form id="profile-form">
                             <div class="form-row">
                                 <div class="form-group">
@@ -39,7 +86,7 @@
                                 <div class="form-group">
                                     <label class="form-label">Email</label>
                                     <input type="email" class="form-control" value="<%= patient.email %>" disabled>
-                                    <small>Contact support to change email</small>
+                                    <small class="form-text">Contact support to change email</small>
                                 </div>
                             </div>
 
@@ -61,34 +108,105 @@
 
                             <div class="form-group">
                                 <label class="form-label">Phone Number</label>
-                                <input type="tel" name="phone" class="form-control" value="<%= patient.phone %>">
+                                <input type="tel" name="phone" class="form-control" value="<%= patient.phone %>" placeholder="Enter your phone number">
                             </div>
 
                             <div class="form-group">
                                 <label class="form-label">Address</label>
-                                <textarea name="address" class="form-control" rows="3"><%= patient.address %></textarea>
+                                <textarea name="address" class="form-control" rows="3" placeholder="Enter your complete address"><%= patient.address %></textarea>
                             </div>
 
                             <div class="form-group">
                                 <label class="form-label">Emergency Contact</label>
                                 <input type="text" name="emergency_contact" class="form-control" value="<%= patient.emergency_contact %>" placeholder="Name and phone number">
+                                <small class="form-text">Please provide name and phone number of your emergency contact</small>
                             </div>
 
-                            <button type="submit" class="btn btn-primary">Update Profile</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                Update Profile
+                            </button>
                         </form>
                     </div>
                 </div>
 
                 <div class="security-section" style="margin-top: 40px;">
                     <div class="card">
-                        <h2>Security</h2>
-                        <button class="btn btn-outline" onclick="changePassword()">Change Password</button>
+                        <div class="section-header">
+                            <h2><i class="fas fa-shield-alt"></i> Security</h2>
+                            <p>Manage your account security settings</p>
+                        </div>
+                        <button class="btn btn-outline" onclick="changePassword()">
+                            <i class="fas fa-key"></i>
+                            Change Password
+                        </button>
                     </div>
                 </div>
             </main>
         </div>
     </div>
 
+    <style>
+        .profile-section .card,
+        .security-section .card {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+        }
+
+        .section-header {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-header h2 {
+            color: var(--text-lighter);
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-header p {
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-text {
+            color: var(--text-dark);
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: block;
+        }
+
+        #profile-form .btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: auto;
+            padding: 12px 30px;
+        }
+
+        .security-section .btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+<script src="/navbar/navbar.js"></script>
     <script>
         function changePassword() {
             const newPassword = prompt('Enter new password:');
@@ -103,6 +221,12 @@
         document.getElementById('profile-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const form = e.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+            submitBtn.disabled = true;
+
             const data = {
                 full_name: form.full_name.value,
                 date_of_birth: form.date_of_birth.value,
@@ -118,16 +242,21 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
+                console.log('response', res);
                 const json = await res.json();
                 if (res.ok && json.success) {
                     alert('Profile updated successfully!');
                     location.reload();
                 } else {
                     alert('Failed to update profile: ' + (json.error || json.message || 'Unknown error'));
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
                 }
             } catch (err) {
                 console.error('Profile update error:', err);
                 alert('Failed to update profile. Check console for details.');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             }
         });
     </script>

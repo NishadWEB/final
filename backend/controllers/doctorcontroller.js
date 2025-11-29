@@ -4,12 +4,15 @@ const Patient = require('../models/patient');
 
 exports.getDashboard = async (req, res) => {
   try {
-    if (!req.session.user || req.session.user.role !== 'doctor') {
+    const user = req && req.session ? req.session.user : null;
+    if (!user) return res.redirect('/auth/login');
+
+    const doctor = await Doctor.findByUserId(user.id);
+    if (!doctor) {
+      console.warn('Doctor profile not found for user', user && user.id);
       return res.redirect('/auth/login');
     }
-
-    const doctor = await Doctor.findByUserId(req.session.user.id);
-    const appointments = await Appointment.findByDoctorId(doctor.id);
+    const appointments = await Appointment.findByDoctorId(doctor && doctor.id);
 
     // Calculate statistics
     const totalAppointments = appointments.length;
@@ -35,11 +38,10 @@ exports.getDashboard = async (req, res) => {
 
 exports.getAppointments = async (req, res) => {
   try {
-    if (!req.session.user || req.session.user.role !== 'doctor') {
-      return res.redirect('/auth/login');
-    }
-
-    const doctor = await Doctor.findByUserId(req.session.user.id);
+    const user = req && req.session ? req.session.user : null;
+    if (!user) return res.redirect('/auth/login');
+    const doctor = await Doctor.findByUserId(user.id);
+    if (!doctor) return res.redirect('/auth/login');
     const appointments = await Appointment.findByDoctorId(doctor.id);
 
     res.render('doctor/appointments', {
@@ -58,7 +60,7 @@ exports.updateAppointmentStatus = async (req, res) => {
   try {
     const { appointment_id, status, doctor_notes, prescription } = req.body;
     
-    if (!req.session.user || req.session.user.role !== 'doctor') {
+    if (!req.session || !req.session.user || req.session.user.role !== 'doctor') {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -84,11 +86,10 @@ exports.updateAvailability = async (req, res) => {
   try {
     const { availability } = req.body;
     
-    if (!req.session.user || req.session.user.role !== 'doctor') {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const doctor = await Doctor.findByUserId(req.session.user.id);
+    const user = req && req.session ? req.session.user : null;
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    const doctor = await Doctor.findByUserId(user.id);
+    if (!doctor) return res.status(401).json({ error: 'Unauthorized' });
     const updatedDoctor = await Doctor.updateAvailability(doctor.id, availability);
 
     res.json({ 
@@ -104,12 +105,18 @@ exports.updateAvailability = async (req, res) => {
 
 exports.getProfile = async (req, res) => {
   try {
-    if (!req.session.user || req.session.user.role !== 'doctor') {
-      return res.redirect('/auth/login');
+    const user = req && req.session ? req.session.user : null;
+    if (!user) return res.redirect('/auth/login');
+    const doctor = await Doctor.findByUserId(user.id);
+    if (!doctor) {
+      // Allow doctors without a profile record to see the profile form and create one
+      return res.render('doctor/profile', {
+        title: 'My Profile',
+        user: req.session.user,
+        doctor: {},
+        newProfile: true
+      });
     }
-
-    const doctor = await Doctor.findByUserId(req.session.user.id);
-    if (!doctor) return res.redirect('/auth/login');
 
     res.render('doctor/profile', {
       title: 'My Profile',
@@ -124,9 +131,8 @@ exports.getProfile = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    if (!req.session.user || req.session.user.role !== 'doctor') {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
+    const user = req && req.session ? req.session.user : null;
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
     const updateData = {
       full_name: req.body.full_name,
@@ -137,8 +143,14 @@ exports.updateProfile = async (req, res) => {
       hospital_affiliation: req.body.hospital_affiliation,
       consultation_fee: req.body.consultation_fee
     };
+    // If doctor profile doesn't exist yet, create one
+    const existing = await Doctor.findByUserId(user.id);
+    if (!existing) {
+      const created = await Doctor.create(user.id, updateData);
+      return res.json({ success: true, doctor: created, message: 'Profile created' });
+    }
 
-    const updated = await Doctor.updateProfile(req.session.user.id, updateData);
+    const updated = await Doctor.updateProfile(user.id, updateData);
     if (!updated) return res.status(400).json({ error: 'No fields to update' });
 
     res.json({ success: true, doctor: updated, message: 'Profile updated' });

@@ -2,7 +2,7 @@
     <div class="navbar-container">
         <a href="/" class="navbar-brand">MediDiag</a>
         
-        <button class="mobile-menu-btn">☰</button>
+        <button class="mobile-menu-btn" aria-label="Toggle menu">☰</button>
         
         <nav class="navbar-nav">
             <a href="/">Home</a>
@@ -28,8 +28,8 @@
                 </div>
             <% } else { %>
                 <div class="navbar-actions">
-                    <a href="/auth/login" class="btn btn-outline">Login</a>
-                    <a href="/auth/register" class="btn btn-primary">Sign Up</a>
+                    <a href="/auth/login" class="btn btn-primary">Login</a>
+                    <a href="/auth/register" class="btn btn-outline">Sign Up</a>
                 </div>
             <% } %>
         </nav>

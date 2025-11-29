@@ -7,29 +7,75 @@
     <link rel="stylesheet" href="/main/main.css">
     <link rel="stylesheet" href="/navbar/navbar.css">
     <link rel="stylesheet" href="/patient/doctors.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <%- include('../headers/preloginheader') %>
+    <%- include('../headers/launchheader') %>
     
+    <!-- Medical Background Elements -->
+    <div class="medical-background">
+        <i class="fas fa-heart medical-icon heart"></i>
+        <i class="fas fa-stethoscope medical-icon stethoscope"></i>
+        <i class="fas fa-pills medical-icon pill"></i>
+        <i class="fas fa-hospital medical-icon hospital"></i>
+        <i class="fas fa-user-md medical-icon doctor"></i>
+        <i class="fas fa-search medical-icon clipboard"></i>
+    </div>
+
     <div class="container patient-dashboard">
         <div class="dashboard-grid">
             <aside class="sidebar">
+                <div class="sidebar-header">
+                    <div class="user-avatar-large">
+                        <%= patient.full_name ? patient.full_name.charAt(0).toUpperCase() : 'P' %>
+                    </div>
+                    <h3><%= patient.full_name %></h3>
+                    <p>Patient ID: <%= patient.id %></p>
+                </div>
                 <nav class="sidebar-nav">
                     <ul>
-                        <li><a href="/patient/dashboard">Dashboard</a></li>
-                        <li><a href="/patient/doctors" class="active">Find Doctors</a></li>
-                        <li><a href="/patient/appointments">My Appointments</a></li>
-                        <li><a href="/patient/profile">Profile</a></li>
-                        <li><a href="/auth/logout">Logout</a></li>
+                        <li>
+                            <a href="/patient/dashboard">
+                                <i class="fas fa-tachometer-alt"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/patient/doctors" class="active">
+                                <i class="fas fa-user-md"></i>
+                                Find Doctors
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/patient/appointments">
+                                <i class="fas fa-calendar-check"></i>
+                                My Appointments
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/patient/profile">
+                                <i class="fas fa-user"></i>
+                                Profile
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/auth/logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Logout
+                            </a>
+                        </li>
                     </ul>
                 </nav>
             </aside>
 
             <main class="dashboard-content">
-                <h1>Find Doctors</h1>
-                <p>Book appointments with verified healthcare professionals</p>
+                <section class="welcome-section">
+                    <h1>Find Doctors <i class="fas fa-user-md"></i></h1>
+                    <p>Book appointments with verified healthcare professionals</p>
+                </section>
 
-                <div class="search-filters">
+                <!-- Search & Filters -->
+                <section class="search-filters">
                     <div class="filter-row">
                         <div class="form-group">
                             <label class="form-label">Search Doctors</label>
@@ -56,10 +102,14 @@
                                 <option value="available">Available Now</option>
                             </select>
                         </div>
-                        <button class="btn btn-primary" onclick="applyFilters()">Search</button>
+                        <button class="btn btn-primary" onclick="applyFilters()">
+                            <i class="fas fa-search"></i>
+                            Search
+                        </button>
                     </div>
-                </div>
+                </section>
 
+                <!-- Doctors Grid -->
                 <div class="doctor-grid">
                     <% if (doctors.length > 0) { %>
                         <% doctors.forEach(doctor => { %>
@@ -69,9 +119,12 @@
                                         <%= doctor.full_name.split(' ').map(n => n[0]).join('').toUpperCase() %>
                                     </div>
                                     <div class="doctor-info">
-                                        <h3><%= doctor.full_name %></h3>
+                                        <h3>Dr. <%= doctor.full_name %></h3>
                                         <p class="doctor-specialty"><%= doctor.specialization %></p>
-                                        <p class="doctor-experience"><%= doctor.experience_years %>+ years experience</p>
+                                        <p class="doctor-experience">
+                                            <i class="fas fa-briefcase"></i>
+                                            <%= doctor.experience_years %>+ years experience
+                                        </p>
                                         <div class="doctor-rating">
                                             <span class="stars">★★★★★</span>
                                             <span>(<%= doctor.review_count || 0 %> reviews)</span>
@@ -81,36 +134,51 @@
 
                                 <div class="doctor-details">
                                     <div class="detail-item">
-                                        <span class="detail-icon">🏥</span>
+                                        <span class="detail-icon"><i class="fas fa-hospital"></i></span>
                                         <span><%= doctor.hospital_affiliation || 'Multiple Hospitals' %></span>
                                     </div>
                                     <div class="detail-item">
-                                        <span class="detail-icon">💰</span>
+                                        <span class="detail-icon"><i class="fas fa-rupee-sign"></i></span>
                                         <span>₹<%= doctor.consultation_fee %> consultation fee</span>
                                     </div>
                                     <div class="detail-item">
-                                        <span class="detail-icon">📞</span>
+                                        <span class="detail-icon"><i class="fas fa-phone"></i></span>
                                         <span><%= doctor.phone %></span>
                                     </div>
                                 </div>
 
                                 <div class="doctor-actions">
                                     <% if (doctor.is_available) { %>
-                                        <span class="availability-badge">Available</span>
-                                        <button class="btn btn-primary book-appointment" data-doctor-id="<%= doctor.id %>">
+                                        <span class="availability-badge">
+                                            <i class="fas fa-check-circle"></i>
+                                            Available
+                                        </span>
+                                        <button class="btn btn-primary book-appointment" data-doctor-id="<%= doctor.id %>" data-doctor-name="<%= doctor.full_name %>">
+                                            <i class="fas fa-calendar-plus"></i>
                                             Book Appointment
                                         </button>
                                     <% } else { %>
-                                        <span class="availability-badge unavailable">Not Available</span>
-                                        <button class="btn btn-outline" disabled>Not Available</button>
+                                        <span class="availability-badge unavailable">
+                                            <i class="fas fa-times-circle"></i>
+                                            Not Available
+                                        </span>
+                                        <button class="btn btn-outline" disabled>
+                                            <i class="fas fa-calendar-times"></i>
+                                            Not Available
+                                        </button>
                                     <% } %>
                                 </div>
                             </div>
                         <% }); %>
                     <% } else { %>
-                        <div class="no-doctors" style="text-align: center; padding: 60px 40px;">
+                        <div class="no-doctors">
+                            <i class="fas fa-user-md"></i>
                             <h3>No Doctors Found</h3>
                             <p>Try adjusting your search filters or check back later.</p>
+                            <button class="btn btn-primary" onclick="clearFilters()">
+                                <i class="fas fa-redo"></i>
+                                Clear Filters
+                            </button>
                         </div>
                     <% } %>
                 </div>
@@ -122,7 +190,7 @@
     <div class="booking-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Book Appointment</h2>
+                <h2><i class="fas fa-calendar-plus"></i> Book Appointment</h2>
                 <button class="close-modal">&times;</button>
             </div>
             
@@ -131,7 +199,7 @@
                 
                 <div class="form-group">
                     <label class="form-label">Doctor</label>
-                    <p id="modal-doctor-name" class="form-control" style="background: #f8f9fa; padding: 12px;"></p>
+                    <p id="modal-doctor-name" class="form-control" style="background: var(--bg-dark); padding: 12px; border-radius: 10px; margin: 0;"></p>
                 </div>
 
                 <div class="form-group">
@@ -142,23 +210,48 @@
                 <div class="form-group">
                     <label class="form-label">Describe Your Symptoms</label>
                     <textarea id="symptoms" name="symptoms" class="form-control" rows="4" placeholder="Please describe your symptoms in detail..." required></textarea>
+                    <div class="symptom-helper">
+                        <small>Select common symptoms to add quickly:</small>
+                        <div class="symptom-list">
+                            <% const COMMON_SYMPTOMS = ['fever','cough','sore throat','sneezing','runny nose','congestion','headache','nausea','vomiting','diarrhea','fatigue','body aches','painful urination','shortness of breath','chest pain','dizziness']; %>
+                            <% COMMON_SYMPTOMS.forEach(s => { %>
+                                <label>
+                                    <input type="checkbox" class="symptom-checkbox" value="<%= s %>" />
+                                    <span><%= s %></span>
+                                </label>
+                            <% }) %>
+                        </div>
+                        <div style="margin-top: 10px; display: flex; gap: 10px;">
+                            <button type="button" id="add-symptoms-btn" class="btn btn-outline">
+                                <i class="fas fa-plus"></i>
+                                Add Selected to Description
+                            </button>
+                            <button type="button" id="clear-symptoms-btn" class="btn btn-link">
+                                <i class="fas fa-times"></i>
+                                Clear Selections
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Get Preliminary Analysis</label>
                     <button type="button" id="diagnose-btn" class="btn btn-outline" style="width: 100%; margin-bottom: 16px;">
+                        <i class="fas fa-robot"></i>
                         Analyze Symptoms
                     </button>
                     <div id="diagnosis-result" class="diagnosis-result" style="display: none;"></div>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Book Appointment</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-calendar-check"></i>
+                    Book Appointment
+                </button>
             </form>
         </div>
     </div>
 
     <script src="/navbar/navbar.js"></script>
-    <script src="/patient/dashboard.js"></script>
     
     <script>
         // Filter functionality
@@ -168,11 +261,12 @@
             const availability = document.getElementById('availability-filter').value;
             
             const doctorCards = document.querySelectorAll('.doctor-card');
+            let visibleCount = 0;
             
             doctorCards.forEach(card => {
                 const doctorName = card.querySelector('h3').textContent.toLowerCase();
                 const doctorSpecialization = card.dataset.specialization;
-                const isAvailable = card.querySelector('.availability-badge').textContent === 'Available';
+                const isAvailable = card.querySelector('.availability-badge').textContent.includes('Available');
                 
                 let show = true;
                 
@@ -189,7 +283,21 @@
                 }
                 
                 card.style.display = show ? 'block' : 'none';
+                if (show) visibleCount++;
             });
+
+            // Show no doctors message if none visible
+            const noDoctorsElement = document.querySelector('.no-doctors');
+            if (noDoctorsElement) {
+                noDoctorsElement.style.display = visibleCount === 0 ? 'block' : 'none';
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('specialization-filter').value = '';
+            document.getElementById('availability-filter').value = 'all';
+            applyFilters();
         }
 
         // Initialize search functionality
@@ -205,15 +313,21 @@
         bookButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const doctorId = e.target.dataset.doctorId;
-                const doctorCard = e.target.closest('.doctor-card');
-                const doctorName = doctorCard.querySelector('h3').textContent;
+                const doctorName = e.target.dataset.doctorName;
                 
-                document.getElementById('modal-doctor-name').textContent = doctorName;
+                document.getElementById('modal-doctor-name').textContent = 'Dr. ' + doctorName;
                 document.getElementById('doctor_id').value = doctorId;
                 
                 // Set minimum date to today
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById('appointment_date').min = today + 'T00:00';
+                const today = new Date();
+                const minDate = today.toISOString().split('T')[0];
+                const minTime = today.toTimeString().split(' ')[0].substring(0, 5);
+                document.getElementById('appointment_date').min = minDate + 'T' + minTime;
+                
+                // Clear previous form data
+                document.getElementById('symptoms').value = '';
+                document.getElementById('diagnosis-result').style.display = 'none';
+                document.querySelectorAll('.symptom-checkbox').forEach(cb => cb.checked = false);
                 
                 bookingModal.classList.add('active');
             });
@@ -229,6 +343,25 @@
             }
         });
 
+        // Symptom helper functionality
+        document.getElementById('add-symptoms-btn').addEventListener('click', function() {
+            const symptomsTextarea = document.getElementById('symptoms');
+            const selectedSymptoms = Array.from(document.querySelectorAll('.symptom-checkbox:checked'))
+                .map(cb => cb.value);
+            
+            if (selectedSymptoms.length > 0) {
+                const currentText = symptomsTextarea.value.trim();
+                const newSymptoms = selectedSymptoms.join(', ');
+                symptomsTextarea.value = currentText ? 
+                    currentText + ', ' + newSymptoms : 
+                    'Symptoms: ' + newSymptoms;
+            }
+        });
+
+        document.getElementById('clear-symptoms-btn').addEventListener('click', function() {
+            document.querySelectorAll('.symptom-checkbox').forEach(cb => cb.checked = false);
+        });
+
         // Diagnosis functionality
         document.getElementById('diagnose-btn').addEventListener('click', async function() {
             const symptoms = document.getElementById('symptoms').value.trim();
@@ -241,11 +374,10 @@
             }
 
             diagnoseBtn.disabled = true;
-            diagnoseBtn.textContent = 'Analyzing...';
+            diagnoseBtn.innerHTML = '<div class="loading-spinner"></div> Analyzing...';
 
             try {
-                // Simulate API call to ML service
-                const response = await fetch('/api/diagnose', {
+                const response = await fetch('http://localhost:5000/analyze', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -255,13 +387,25 @@
 
                 const result = await response.json();
                 
+                const urgentBadge = result.needs_doctor ? 
+                    `<div class="alert alert-error" style="margin-top: 10px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Medical Attention Recommended</strong>
+                        <p>Based on your symptoms, we recommend consulting a doctor immediately.</p>
+                    </div>` : '';
+                
+                const confidence = (result.confidence || 0).toFixed(2);
+                const confidenceLevel = confidence > 0.7 ? 'high' : confidence > 0.4 ? 'medium' : 'low';
+
                 diagnosisResult.innerHTML = `
-                    <h4>Preliminary Analysis</h4>
-                    <p><strong>Possible Condition:</strong> ${result.diagnosis}</p>
-                    <p><strong>Recommendation:</strong> ${result.recommendation}</p>
-                    ${result.severity === 'high' ? 
-                        '<div class="alert alert-error" style="margin-top: 10px;">Please consult a doctor immediately</div>' : 
-                        ''}
+                    <h4><i class="fas fa-diagnosis"></i> Preliminary Analysis</h4>
+                    <div class="confidence-badge confidence-${confidenceLevel}" style="margin: 10px 0;">
+                        ${(confidence * 100).toFixed(0)}% Confidence
+                    </div>
+                    <p><strong>Possible Condition:</strong> ${result.diagnosis || "No clear diagnosis identified"}</p>
+                    <p><strong>Identified Symptoms:</strong> ${Array.isArray(result.identified_symptoms) ? result.identified_symptoms.join(", ") : "Not specified"}</p>
+                    <p><strong>Recommendation:</strong> ${result.recommendation || "Consult with a healthcare professional for accurate diagnosis"}</p>
+                    ${urgentBadge}
                 `;
                 diagnosisResult.style.display = 'block';
                 
@@ -269,13 +413,15 @@
                 console.error('Diagnosis error:', error);
                 diagnosisResult.innerHTML = `
                     <div class="alert alert-error">
-                        Error analyzing symptoms. Please proceed with booking and discuss with the doctor.
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>Service Unavailable</strong>
+                        <p>We're unable to connect to our diagnosis service at the moment. Please proceed with booking and discuss your symptoms with the doctor.</p>
                     </div>
                 `;
                 diagnosisResult.style.display = 'block';
             } finally {
                 diagnoseBtn.disabled = false;
-                diagnoseBtn.textContent = 'Analyze Symptoms';
+                diagnoseBtn.innerHTML = '<i class="fas fa-robot"></i> Analyze Symptoms';
             }
         });
 
@@ -283,6 +429,12 @@
         document.getElementById('booking-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<div class="loading-spinner"></div> Booking...';
+
             const formData = new FormData(this);
             const data = Object.fromEntries(formData);
             
@@ -291,7 +443,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                    },
+                        },
                     body: JSON.stringify(data)
                 });
 
@@ -307,6 +459,16 @@
             } catch (error) {
                 console.error('Booking error:', error);
                 alert('Error booking appointment. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && bookingModal.classList.contains('active')) {
+                bookingModal.classList.remove('active');
             }
         });
     </script>

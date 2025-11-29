@@ -20,7 +20,8 @@ exports.getDashboard = async (req, res) => {
       title: 'Patient Dashboard',
       user: req.session.user,
       patient,
-      appointments
+      appointments,
+      currentPage: 'dashboard'
     });
   } catch (error) {
     console.error('Dashboard error:', error);
@@ -153,5 +154,29 @@ exports.updateProfile = async (req, res) => {
   } catch (error) {
     console.error('Update profile error:', error);
     res.status(500).json({ error: 'Failed to update profile' });
+  }
+};
+
+exports.cancelAppointment = async (req, res) => {
+  try {
+    if (!req.session.user || req.session.user.role !== 'patient') {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { appointment_id } = req.body;
+    if (!appointment_id) return res.status(400).json({ error: 'Missing appointment_id' });
+
+    const patient = await Patient.findByUserId(req.session.user.id);
+    if (!patient) return res.status(401).json({ error: 'Unauthorized' });
+
+    const appointment = await Appointment.findById(appointment_id);
+    if (!appointment) return res.status(404).json({ error: 'Appointment not found' });
+    if (appointment.patient_id !== patient.id) return res.status(403).json({ error: 'Forbidden' });
+
+    const updated = await Appointment.updateStatus(appointment_id, 'cancelled', null, null);
+    res.json({ success: true, appointment: updated, message: 'Appointment cancelled' });
+  } catch (error) {
+    console.error('Cancel appointment error:', error);
+    res.status(500).json({ error: 'Failed to cancel appointment' });
   }
 };

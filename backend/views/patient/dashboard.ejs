@@ -3,62 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %></title>
+    <title><%= title %> - MediDiag</title>
     <link rel="stylesheet" href="/main/main.css">
     <link rel="stylesheet" href="/navbar/navbar.css">
     <link rel="stylesheet" href="/patient/dashboard.css">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <%- include('../headers/preloginheader') %>
+    <%- include('../headers/launchheader') %>
     
+    <!-- Medical Background Elements -->
+    <div class="medical-background">
+        <i class="fas fa-heart medical-icon heart"></i>
+        <i class="fas fa-stethoscope medical-icon stethoscope"></i>
+        <i class="fas fa-pills medical-icon pill"></i>
+        <i class="fas fa-hospital medical-icon hospital"></i>
+        <i class="fas fa-clock medical-icon time"></i>
+        <i class="fas fa-clipboard-list medical-icon clipboard"></i>
+    </div>
+
     <div class="container patient-dashboard">
         <div class="dashboard-grid">
             <aside class="sidebar">
+                <div class="sidebar-header">
+                    <div class="user-avatar-large">
+                        <%= patient.full_name ? patient.full_name.charAt(0).toUpperCase() : 'P' %>
+                    </div>
+                    <h3><%= patient.full_name %></h3>
+                    <p>Patient ID: <%= patient.id %></p>
+                </div>
                 <nav class="sidebar-nav">
                     <ul>
-                        <li><a href="/patient/dashboard" class="active">Dashboard</a></li>
-                        <li><a href="/patient/doctors">Find Doctors</a></li>
-                        <li><a href="/patient/appointments">My Appointments</a></li>
-                        <li><a href="/patient/profile">Profile</a></li>
-                        <li><a href="/auth/logout">Logout</a></li>
+                        <li>
+                            <a href="/patient/dashboard" class="active">
+                                <i class="fas fa-tachometer-alt"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/patient/doctors">
+                                <i class="fas fa-user-md"></i>
+                                Find Doctors
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/patient/appointments">
+                                <i class="fas fa-calendar-check"></i>
+                                My Appointments
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/patient/profile">
+                                <i class="fas fa-user"></i>
+                                Profile
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/auth/logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Logout
+                            </a>
+                        </li>
                     </ul>
                 </nav>
             </aside>
 
             <main class="dashboard-content">
-                <div class="welcome-section">
-                    <h1>Welcome, <%= patient.full_name %>!</h1>
+                <!-- Welcome Section -->
+                <section class="welcome-section animate-fade-in-up">
+                    <h1>Welcome back, <%= patient.full_name %>! <span class="welcome-emoji">👋</span></h1>
                     <p>Your health journey starts here. We're here to support you every step of the way.</p>
-                </div>
-
-                <div class="quick-actions">
-                    <a href="/patient/doctors" class="quick-action-card">
-                        <div class="quick-action-icon">👨‍⚕️</div>
-                        <h3>Find Doctors</h3>
-                        <p>Book appointments with specialists</p>
-                    </a>
-                    <a href="/patient/appointments" class="quick-action-card">
-                        <div class="quick-action-icon">📅</div>
-                        <h3>My Appointments</h3>
-                        <p>View and manage your bookings</p>
-                    </a>
-                    <div class="quick-action-card" onclick="document.getElementById('diagnosis-tool').scrollIntoView()">
-                        <div class="quick-action-icon">🔍</div>
-                        <h3>Symptom Checker</h3>
-                        <p>Get preliminary analysis</p>
+                    <div class="health-stats">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number"><%= appointments.length %></span>
+                                <span class="stat-label">Total Appointments</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number"><%= new Set(appointments.map(a => a.doctor_id)).size %></span>
+                                <span class="stat-label">Doctors Consulted</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </section>
 
-                <div class="recent-appointments">
-                    <h2>Recent Appointments</h2>
+                <!-- Quick Actions -->
+                <section class="quick-actions-section animate-on-scroll">
+                    <h2 class="section-title">Quick Actions</h2>
+                    <div class="quick-actions">
+                        <a href="/patient/doctors" class="quick-action-card">
+                            <div class="quick-action-icon">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                            <h3>Find Doctors</h3>
+                            <p>Book appointments with specialists</p>
+                            <span class="action-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </span>
+                        </a>
+                        
+                        <a href="/patient/appointments" class="quick-action-card">
+                            <div class="quick-action-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <h3>My Appointments</h3>
+                            <p>View and manage your bookings</p>
+                            <span class="action-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </span>
+                        </a>
+                        
+                        <a href="#diagnosis-tool" class="quick-action-card">
+                            <div class="quick-action-icon">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <h3>Symptom Checker</h3>
+                            <p>Get preliminary analysis</p>
+                            <span class="action-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                </section>
+
+                <!-- Symptom Checker -->
+                <section id="diagnosis-tool" class="diagnosis-section animate-on-scroll">
+                    <div class="section-header">
+                        <h2><i class="fas fa-stethoscope"></i> Symptom Checker</h2>
+                        <p>Describe your symptoms for a preliminary analysis</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <textarea id="symptoms" class="symptom-input" 
+                                  placeholder="Describe your symptoms in detail (e.g., headache, fever, cough duration, severity, etc.)..."></textarea>
+                    </div>
+                    
+                    <button id="diagnose-btn" class="btn btn-primary">
+                        <i class="fas fa-robot"></i>
+                        Analyze Symptoms
+                    </button>
+                    
+                    <div id="diagnosis-result" class="diagnosis-result" style="display: none;">
+                        <!-- Diagnosis results will appear here -->
+                    </div>
+                    
+                    <div class="disclaimer">
+                        <p>
+                            <strong><i class="fas fa-exclamation-triangle"></i> Disclaimer:</strong> 
+                            This is a preliminary automated analysis and not a medical diagnosis. 
+                            For emergencies or severe symptoms, call your local emergency number immediately.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Recent Appointments -->
+                <section class="recent-appointments animate-on-scroll">
+                    <div class="section-header">
+                        <h2><i class="fas fa-history"></i> Recent Appointments</h2>
+                        <a href="/patient/appointments" class="view-all">View All</a>
+                    </div>
+                    
                     <div class="appointment-list">
                         <% if (appointments.length > 0) { %>
-                            <% appointments.slice(0, 5).forEach(appointment => { %>
+                            <% appointments.slice(0, 3).forEach(appointment => { %>
                                 <div class="appointment-item">
                                     <div class="appointment-info">
-                                        <h4>Dr. <%= appointment.doctor_name %></h4>
-                                        <p><%= appointment.specialization %></p>
-                                        <p><%= new Date(appointment.appointment_date).toLocaleString() %></p>
+                                        <div class="doctor-avatar-small">
+                                            <%= appointment.doctor_name ? appointment.doctor_name.charAt(0).toUpperCase() : 'D' %>
+                                        </div>
+                                        <div class="appointment-details">
+                                            <h4>Dr. <%= appointment.doctor_name %></h4>
+                                            <p class="specialization"><%= appointment.specialization %></p>
+                                            <p class="appointment-date">
+                                                <i class="far fa-clock"></i>
+                                                <%= new Date(appointment.appointment_date).toLocaleString() %>
+                                            </p>
+                                        </div>
                                     </div>
                                     <div class="appointment-status status-<%= appointment.status %>">
                                         <%= appointment.status %>
@@ -66,52 +195,331 @@
                                 </div>
                             <% }); %>
                         <% } else { %>
-                            <p>No appointments yet. <a href="/patient/doctors">Book your first appointment</a></p>
+                            <div class="empty-state">
+                                <i class="fas fa-calendar-plus"></i>
+                                <h4>No Appointments Yet</h4>
+                                <p>Book your first appointment with a healthcare professional</p>
+                                <a href="/patient/doctors" class="btn btn-primary">Find Doctors</a>
+                            </div>
                         <% } %>
                     </div>
-                </div>
+                </section>
 
-                <div id="diagnosis-tool" class="diagnosis-section">
-                    <h2>Symptom Checker</h2>
-                    <p>Describe your symptoms for a preliminary analysis</p>
-                    
-                    <div class="form-group">
-                        <textarea id="symptoms" class="symptom-input" placeholder="Describe your symptoms in detail..."></textarea>
+                <!-- AI Chat -->
+                <section id="patient-chat" class="chat-section animate-on-scroll">
+                    <div class="section-header">
+                        <h2><i class="fas fa-comments"></i> Chat with Care Team</h2>
+                        <p>Get instant answers to your health questions</p>
                     </div>
                     
-                    <button id="diagnose-btn" class="btn btn-primary">Analyze Symptoms</button>
-                    
-                    <div id="diagnosis-result" class="diagnosis-result" style="display: none;">
-                        <!-- Diagnosis results will appear here -->
+                    <div class="chat-window">
+                        <div id="chat-messages" class="chat-messages">
+                            <div class="msg ai-msg welcome-msg">
+                                <div class="msg-avatar">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                                <div class="msg-content">
+                                    <div class="msg-header">
+                                        <strong>MediDiag Assistant</strong>
+                                        <span class="msg-time"><%= new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) %></span>
+                                    </div>
+                                    <div class="msg-body">
+                                        <p>Hello! I'm your MediDiag Assistant. I'm here to help answer your health-related questions, provide information about symptoms, and guide you to the right resources. How can I assist you today?</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                    
+                    <div class="chat-input-row">
+                        <input id="chat-input" type="text" placeholder="Type your health question here..." />
+                        <button id="chat-send" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                            Send
+                        </button>
+                    </div>
+                </section>
 
-                    <div id="patient-chat" class="chat-section">
-                        <h2>Chat with Care Team</h2>
-                        <div id="chat-window" class="chat-window">
-                            <div id="chat-messages" class="chat-messages"></div>
+                <!-- Health Tips -->
+                <section class="health-tips animate-on-scroll">
+                    <div class="section-header">
+                        <h2><i class="fas fa-lightbulb"></i> Health Tips</h2>
+                    </div>
+                    <div class="tips-list">
+                        <div class="tip-item">
+                            <div class="tip-icon">
+                                <i class="fas fa-glass-whiskey"></i>
+                            </div>
+                            <div class="tip-content">
+                                <h4>Stay Hydrated</h4>
+                                <p>Drink at least 8 glasses of water daily for optimal health.</p>
+                            </div>
                         </div>
-                        <div class="chat-input-row">
-                            <input id="chat-input" type="text" placeholder="Type your message..." />
-                            <button id="chat-send" class="btn btn-primary">Send</button>
+                        <div class="tip-item">
+                            <div class="tip-icon">
+                                <i class="fas fa-walking"></i>
+                            </div>
+                            <div class="tip-content">
+                                <h4>Daily Exercise</h4>
+                                <p>30 minutes of moderate activity can boost your immune system.</p>
+                            </div>
+                        </div>
+                        <div class="tip-item">
+                            <div class="tip-icon">
+                                <i class="fas fa-bed"></i>
+                            </div>
+                            <div class="tip-content">
+                                <h4>Quality Sleep</h4>
+                                <p>Aim for 7-9 hours of sleep each night for better recovery.</p>
+                            </div>
+                        </div>
+                        <div class="tip-item">
+                            <div class="tip-icon">
+                                <i class="fas fa-apple-alt"></i>
+                            </div>
+                            <div class="tip-content">
+                                <h4>Balanced Diet</h4>
+                                <p>Eat a variety of fruits, vegetables, and whole grains daily.</p>
+                            </div>
+                        </div>
+                        <div class="tip-item">
+                            <div class="tip-icon">
+                                <i class="fas fa-smile"></i>
+                            </div>
+                            <div class="tip-content">
+                                <h4>Mental Health</h4>
+                                <p>Practice mindfulness and take breaks to reduce stress.</p>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </section>
             </main>
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="/navbar/navbar.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <!-- embed current user safely as JSON so EJS tokens don't break JS parsing -->
-    <script id="current-user" type="application/json"><%- JSON.stringify({ id: (user && user.id) || null, role: (user && user.role) || '', patientId: (patient && patient.id) || null }) %></script>
+
+    
+    <!-- Current User Data -->
+    <script id="current-user" type="application/json">
+        <%- JSON.stringify({ 
+            id: (user && user.id) || null, 
+            role: (user && user.role) || '', 
+            patientId: (patient && patient.id) || null,
+            patientName: (patient && patient.full_name) || 'Patient'
+        }) %>
+    </script>
+
     <script>
+        // Initialize current user data
         try {
             const el = document.getElementById('current-user');
-            window.CURRENT_USER = el && el.textContent ? JSON.parse(el.textContent) : { id: null, role: '', patientId: null };
+            window.CURRENT_USER = el && el.textContent ? JSON.parse(el.textContent) : { 
+                id: null, 
+                role: '', 
+                patientId: null,
+                patientName: 'Patient'
+            };
         } catch (e) {
-            window.CURRENT_USER = { id: null, role: '', patientId: null };
+            window.CURRENT_USER = { 
+                id: null, 
+                role: '', 
+                patientId: null,
+                patientName: 'Patient'
+            };
         }
+
+        // Symptom Checker Functionality
+        document.getElementById("diagnose-btn").addEventListener("click", async () => {
+            const symptoms = document.getElementById("symptoms").value.trim();
+            const resultBox = document.getElementById("diagnosis-result");
+            const diagnoseBtn = document.getElementById("diagnose-btn");
+            
+            if (!symptoms) { 
+                alert("Please enter your symptoms to continue."); 
+                return; 
+            }
+
+            // Show loading state
+            diagnoseBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            diagnoseBtn.disabled = true;
+            
+            resultBox.style.display = "block";
+            resultBox.innerHTML = `
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Analyzing your symptoms with our AI system...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch("http://localhost:5000/analyze", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ symptoms })
+                });
+                
+                const data = await response.json();
+
+                // Show emergency highlight if needs_doctor true or confidence low for serious symptoms
+                const urgentBadge = data.needs_doctor ? `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Medical Attention Recommended</strong>
+                        <p>Based on your symptoms, we recommend consulting a healthcare professional.</p>
+                    </div>
+                ` : "";
+                
+                const conf = (data.confidence || 0).toFixed(2);
+                const confidenceLevel = conf > 0.7 ? 'high' : conf > 0.4 ? 'medium' : 'low';
+
+                resultBox.innerHTML = `
+                    ${urgentBadge}
+                    <div class="diagnosis-header">
+                        <h3><i class="fas fa-diagnosis"></i> Preliminary Analysis</h3>
+                        <div class="confidence-badge confidence-${confidenceLevel}">
+                            ${(conf * 100).toFixed(0)}% Confidence
+                        </div>
+                    </div>
+                    
+                    <div class="diagnosis-details">
+                        <div class="detail-row">
+                            <label>Possible Condition:</label>
+                            <span class="diagnosis-text">${data.diagnosis || "No clear diagnosis identified"}</span>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <label>Identified Symptoms:</label>
+                            <span>${Array.isArray(data.identified_symptoms) ? data.identified_symptoms.join(", ") : "Not specified"}</span>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <label>Recommendation:</label>
+                            <span class="recommendation">${data.recommendation || "Consult with a healthcare professional for accurate diagnosis"}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="diagnosis-footer">
+                        <p><i class="fas fa-info-circle"></i> Source: ${data.source || "MediDiag AI Analysis"}</p>
+                    </div>
+                `;
+                
+            } catch (err) {
+                console.error("Diagnosis error:", err);
+                resultBox.innerHTML = `
+                    <div class="error-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h4>Service Unavailable</h4>
+                        <p>We're unable to connect to our diagnosis service at the moment. Please try again later or consult directly with a healthcare provider.</p>
+                    </div>
+                `;
+            } finally {
+                // Reset button state
+                diagnoseBtn.innerHTML = '<i class="fas fa-robot"></i> Analyze Symptoms';
+                diagnoseBtn.disabled = false;
+            }
+        });
+
+        // Chat Functionality
+        const chatWindow = document.getElementById("chat-messages");
+        const sendBtn = document.getElementById("chat-send");
+        const input = document.getElementById("chat-input");
+
+        function getCurrentTime() {
+            return new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        function addMessage(sender, text) {
+            const msgDiv = document.createElement("div");
+            msgDiv.className = `msg ${sender}-msg`;
+            
+            const avatar = sender === "user" 
+                ? `<div class="msg-avatar user-avatar">${window.CURRENT_USER.patientName.charAt(0).toUpperCase()}</div>`
+                : `<div class="msg-avatar"><i class="fas fa-robot"></i></div>`;
+            
+            const senderName = sender === "user" ? "You" : "MediDiag Assistant";
+            
+            msgDiv.innerHTML = `
+                ${avatar}
+                <div class="msg-content">
+                    <div class="msg-header">
+                        <strong>${senderName}</strong>
+                        <span class="msg-time">${getCurrentTime()}</span>
+                    </div>
+                    <div class="msg-body">
+                        <p>${text}</p>
+                    </div>
+                </div>
+            `;
+            
+            chatWindow.appendChild(msgDiv);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        sendBtn.addEventListener("click", sendMessage);
+        input.addEventListener("keypress", e => {
+            if (e.key === "Enter") sendMessage();
+        });
+
+        async function sendMessage() {
+            const text = input.value.trim();
+            if (!text) return;
+
+            // Add user message
+            addMessage("user", text);
+            input.value = "";
+            
+            // Disable send button and show loading
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+            try {
+                const res = await fetch("http://localhost:5000/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: text })
+                });
+
+                const data = await res.json();
+                
+                // Add AI response on new line
+                setTimeout(() => {
+                    addMessage("ai", data.reply || "I'm sorry, I'm unable to respond right now. Please try again later or contact our support team.");
+                }, 500);
+                
+            } catch (err) {
+                setTimeout(() => {
+                    addMessage("ai", "⚠️ I'm experiencing connection issues right now. Please check your internet connection and try again, or contact our support team for immediate assistance.");
+                }, 500);
+            } finally {
+                // Re-enable send button
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send';
+            }
+        }
+
+        // Scroll animations
+        document.addEventListener('DOMContentLoaded', function() {
+            const animateElements = document.querySelectorAll('.animate-on-scroll');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            animateElements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(el);
+            });
+        });
     </script>
-    <script src="/patient/dashboard.js"></script>
 </body>
 </html>

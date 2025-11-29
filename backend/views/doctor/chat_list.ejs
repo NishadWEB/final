@@ -1,0 +1,36 @@
+<%- include('../headers/preloginheader') %>
+<main class="container">
+  <h2>Patient Chats</h2>
+  <% if (!patients || patients.length === 0) { %>
+    <p>No patient chats yet.</p>
+  <% } else { %>
+    <ul>
+      <% patients.forEach(p => { %>
+        <li>
+          <a href="/doctor/chats/<%= p.patientId %>">Patient: <%= p.patientId %></a>
+          - Messages: <%= p.count %>
+          <% if (p.lastAt) { %>
+            - Last: <%= new Date(p.lastAt).toLocaleString() %>
+          <% } %>
+          <div><small><%= p.lastMessage %></small></div>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+</main>
+<%- include('../main/footer') %>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Patient Chats</title>
+</head>
+<body>
+  <h1>Patient Chats</h1>
+  <ul>
+    <% patients.forEach(p => { %>
+      <li><a href="/doctor/chats/<%= p.id %>">Patient <%= p.id %></a></li>
+    <% }); %>
+  </ul>
+</body>
+</html>

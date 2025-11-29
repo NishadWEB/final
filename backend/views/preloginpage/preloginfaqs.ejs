@@ -7,37 +7,151 @@
     <link rel="stylesheet" href="/main/main.css">
     <link rel="stylesheet" href="/navbar/navbar.css">
     <link rel="stylesheet" href="/faqs/faqs.css">
+    <link rel="stylesheet" href="/footer/footer.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <%- include('../headers/preloginheader') %>
+    <div class="medical-background"></div>
     
-    <section class="faqs-hero">
-        <div class="container">
-            <h1>Frequently Asked Questions</h1>
-            <p>Find answers to common questions</p>
-        </div>
-    </section>
+    <main>
+        <section class="faqs-hero">
+            <div class="faqs-hero-container">
+                <h1>Frequently Asked Questions</h1>
+                <p>Find answers to common questions about MediDiag and how our platform works</p>
+            </div>
+        </section>
 
-    <section class="faqs-content">
-        <div class="container">
-            <!-- Same FAQ content as launchpage/faqs.ejs -->
-            <div class="faq-list">
-                <div class="faq-item">
-                    <div class="faq-question">
-                        How do I create an account?
-                        <span class="faq-icon">▼</span>
+        <section class="faqs-content">
+            <div class="container">
+                <div class="faq-categories">
+                    <button class="category-btn active" data-category="all">All Questions</button>
+                    <button class="category-btn" data-category="general">General</button>
+                    <button class="category-btn" data-category="patient">For Patients</button>
+                    <button class="category-btn" data-category="doctor">For Doctors</button>
+                    <button class="category-btn" data-category="technical">Technical</button>
+                </div>
+
+                <div class="faq-list">
+                    <!-- General Questions -->
+                    <div class="faq-item animate-on-scroll" data-category="general">
+                        <div class="faq-question">
+                            What is MediDiag and how does it work?
+                            <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>MediDiag is an online preliminary diagnosis platform that connects patients with healthcare professionals. Patients can describe their symptoms through our guided questionnaire, receive AI-powered preliminary analysis, and book consultations with verified doctors for further evaluation.</p>
+                        </div>
                     </div>
-                    <div class="faq-answer">
-                        <p>Click on Sign Up and choose your role as Patient or Doctor.</p>
+
+                    <div class="faq-item animate-on-scroll" data-category="general">
+                        <div class="faq-question">
+                            Is MediDiag a replacement for in-person doctor visits?
+                            <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>No, MediDiag is not a replacement for in-person medical care. It's designed for preliminary assessments and non-emergency consultations. For serious medical conditions, emergencies, or when physical examination is required, we always recommend visiting a healthcare facility in person.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item animate-on-scroll" data-category="general">
+                        <div class="faq-question">
+                            How accurate is the preliminary diagnosis?
+                            <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Our AI-powered preliminary diagnosis is based on medical knowledge and symptom patterns, but it should not be considered a definitive diagnosis. The accuracy varies depending on the symptoms provided. Always consult with a healthcare professional for proper medical diagnosis and treatment.</p>
+                        </div>
+                    </div>
+
+                    <!-- Patient Questions -->
+                    <div class="faq-item animate-on-scroll" data-category="patient">
+                        <div class="faq-question">
+                            How do I create a patient account?
+                            <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Click on "Sign Up" and select "Patient" as your role. You'll need to provide your email address, create a password, and fill in your basic information. The process takes just a few minutes.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item animate-on-scroll" data-category="patient">
+                        <div class="faq-question">
+                            Is my medical information secure?
+                            <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Yes, we take your privacy and security very seriously. All medical data is protected with bank-level encryption, and we are fully compliant with healthcare data protection regulations. Your information is never shared without your consent.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item animate-on-scroll" data-category="patient">
+                        <div class="faq-question">
+                            How much does it cost to use MediDiag?
+                            <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Creating an account and using the symptom checker is free. Consultation fees vary by doctor and are clearly displayed before booking. You only pay for the services you use.</p>
+                        </div>
+                    </div>
+
+                    <!-- Doctor Questions -->
+                    <div class="faq-item animate-on-scroll" data-category="doctor">
+                        <div class="faq-question">
+                            How do I join MediDiag as a healthcare provider?
+                            <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Click on "Sign Up" and select "Doctor" as your role. You'll need to provide your medical license information, specialization, and other professional details. Our team will verify your credentials before activating your account.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item animate-on-scroll" data-category="doctor">
+                        <div class="faq-question">
+                            What are the benefits for healthcare professionals?
+                            <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>MediDiag provides doctors with tools to manage online practice, patient management system, e-prescription capabilities, collaboration tools, and access to a wider patient base. You can set your own availability and consultation fees.</p>
+                        </div>
+                    </div>
+
+                    <!-- Technical Questions -->
+                    <div class="faq-item animate-on-scroll" data-category="technical">
+                        <div class="faq-question">
+                            What devices and browsers are supported?
+                            <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>MediDiag works on all modern browsers (Chrome, Firefox, Safari, Edge) and devices (desktop, tablet, mobile). For the best experience, we recommend using the latest version of your browser.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item animate-on-scroll" data-category="technical">
+                        <div class="faq-question">
+                            Is there a mobile app available?
+                            <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Currently, we offer a fully responsive web application that works seamlessly on mobile devices. We are developing native mobile apps for iOS and Android, which will be released soon.</p>
+                        </div>
                     </div>
                 </div>
-                <!-- Add more FAQs as needed -->
+
+                <div style="text-align: center; margin-top: 60px; padding: 40px; background: var(--bg-light); border-radius: 12px;">
+                    <h3>Still Have Questions?</h3>
+                    <p style="margin: 16px 0;">Can't find the answer you're looking for? Our support team is here to help you with any questions or concerns.</p>
+                    <a href="/contact" class="btn btn-primary">Contact Support</a>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
+    </main>
 
     <%- include('../main/footer') %>
     
+    <script src="/navbar/navbar.js"></script>
+    <script src="/homepage/launchpage.js"></script>
     <script src="/faqs/faqs.js"></script>
+    <script src="/scrollbutton/scrollbutton.js"></script>
 </body>
 </html>

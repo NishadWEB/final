@@ -1,685 +1,401 @@
+# ml_service/model.py
+print("[ml_service] module import", "__name__=", __name__)
+from dotenv import load_dotenv
+load_dotenv()
+print("ENV FILE LOADED")
+import os
+import re
+import json
+import time
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import re
-import os
+from flask_socketio import SocketIO, emit, join_room
+import openai
 
-# NLTK is optional — prefer pure-python fallback if unavailable
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+
+if not openai.api_key:
+    print("[ml_service] WARNING: OPENAI_API_KEY not set")
+else:
+    print("[ml_service] OPENAI_API_KEY loaded")
+
+
+# Lazy import OpenAI (so service still runs without it)
 try:
-    import nltk
-    from nltk.corpus import stopwords
-    from nltk.stem import WordNetLemmatizer
-    try:
-        nltk.data.find('corpora/stopwords')
-    except Exception:
-        try:
-            nltk.download('stopwords')
-        except Exception:
-            pass
-    try:
-        nltk.data.find('corpora/wordnet')
-    except Exception:
-        try:
-            nltk.download('wordnet')
-        except Exception:
-            pass
-    lemmatizer = WordNetLemmatizer()
-    stop_words = set(stopwords.words('english'))
+    import openai
+    OPENAI_AVAILABLE = True
 except Exception:
-    lemmatizer = None
-    stop_words = set()
+    OPENAI_AVAILABLE = False
 
 app = Flask(__name__)
 CORS(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
-
-class MedicalDiagnosisModel:
+# -------------------------
+# Expanded local fallback rule-based diagnoser
+# -------------------------
+class MedicalDiagnosisModelLocal:
     def __init__(self):
         self.disease_info = {}
         self.symptom_aliases = {}
-        self.load_knowledge_base()
+        self._build_kb()
 
-    def load_knowledge_base(self):
-        # Define diseases and canonical symptom keywords
+    def _build_kb(self):
+        # Expanded (illustrative) knowledge base. Add more entries over time.
         self.disease_info = {
             'common_cold': {
                 'name': 'Common Cold',
                 'symptoms': ['cough', 'sneezing', 'runny nose', 'sore throat', 'congestion'],
-                'treatment': 'Rest, hydration, over-the-counter cold medication',
-                'severity': 'low',
-                'needs_doctor': False
+                'treatment': 'Rest, fluids, OTC antihistamines/decongestants',
+                'severity': 'low', 'needs_doctor': False
             },
-            'flu': {
+            'influenza': {
                 'name': 'Influenza (Flu)',
-                'symptoms': ['fever', 'cough', 'sore throat', 'body aches', 'headache', 'fatigue'],
-                'treatment': 'Rest, fluids, antiviral medication if early',
-                'severity': 'medium',
-                'needs_doctor': True
+                'symptoms': ['fever', 'cough', 'body aches', 'chills', 'fatigue', 'headache'],
+                'treatment': 'Rest, fluids, antipyretics; see doctor if severe',
+                'severity': 'medium', 'needs_doctor': True
             },
             'migraine': {
                 'name': 'Migraine',
-                'symptoms': ['headache', 'nausea', 'sensitivity to light', 'sensitivity to sound'],
-                'treatment': 'Rest in dark room, pain relievers, prescription migraine medication',
-                'severity': 'medium',
-                'needs_doctor': True
+                'symptoms': ['headache', 'nausea', 'sensitivity to light', 'visual disturbances'],
+                'treatment': 'Rest in dark room, triptans if prescribed',
+                'severity': 'medium', 'needs_doctor': True
             },
             'gastroenteritis': {
                 'name': 'Gastroenteritis',
-                'symptoms': ['nausea', 'vomiting', 'diarrhea', 'stomach cramps', 'fever'],
-                'treatment': 'Hydration, bland diet, rest',
-                'severity': 'medium',
-                'needs_doctor': False
-            },
-            'allergies': {
-                'name': 'Allergic Rhinitis',
-                'symptoms': ['sneezing', 'runny nose', 'itchy eyes', 'congestion'],
-                'treatment': 'Antihistamines, nasal sprays, allergen avoidance',
-                'severity': 'low',
-                'needs_doctor': False
+                'symptoms': ['nausea', 'vomiting', 'diarrhea', 'stomach pain', 'cramps'],
+                'treatment': 'Hydration, bland diet; seek care if severe',
+                'severity': 'medium', 'needs_doctor': False
             },
             'uti': {
                 'name': 'Urinary Tract Infection',
-                'symptoms': ['painful urination', 'frequent urination', 'lower abdominal pain'],
-                'treatment': 'Antibiotics (prescription required)',
-                'severity': 'high',
-                'needs_doctor': True
+                'symptoms': ['burning urination', 'frequent urination', 'lower abdominal pain', 'cloudy urine'],
+                'treatment': 'Medical evaluation; likely antibiotics',
+                'severity': 'high', 'needs_doctor': True
             },
-            'sinusitis': {
-                'name': 'Sinus Infection',
-                'symptoms': ['facial pain', 'congestion', 'headache', 'thick nasal discharge'],
-                'treatment': 'Decongestants, nasal irrigation, antibiotics if bacterial',
-                'severity': 'medium',
-                'needs_doctor': True
+            'covid_like': {
+                'name': 'Viral Respiratory Infection (e.g., COVID-19)',
+                'symptoms': ['fever', 'cough', 'loss of taste', 'loss of smell', 'fatigue', 'sore throat', 'shortness of breath'],
+                'treatment': 'Isolate, test if recommended, supportive care',
+                'severity': 'medium', 'needs_doctor': True
+            },
+            'allergic_rhinitis': {
+                'name': 'Allergic Rhinitis (Allergy)',
+                'symptoms': ['sneezing', 'runny nose', 'itchy eyes', 'congestion'],
+                'treatment': 'Antihistamines, avoid allergens',
+                'severity': 'low', 'needs_doctor': False
+            },
+            'appendicitis': {
+                'name': 'Appendicitis',
+                'symptoms': ['acute abdominal pain', 'right lower quadrant pain', 'fever', 'nausea', 'loss of appetite'],
+                # NOTE: keep treatment generic; avoid alarming text for single-symptom triggers
+                'treatment': 'See a clinician if abdominal pain is severe or persistent',
+                'severity': 'high', 'needs_doctor': True
+            },
+            'hypertension_urgent': {
+                'name': 'Possible Hypertensive Episode',
+                'symptoms': ['very high blood pressure', 'severe headache', 'blurred vision', 'nosebleed'],
+                'treatment': 'Seek urgent medical attention',
+                'severity': 'high', 'needs_doctor': True
+            },
+            'dermatitis': {
+                'name': 'Dermatitis / Skin Rash',
+                'symptoms': ['rash', 'itching', 'redness', 'swelling'],
+                'treatment': 'Topical emollients/antihistamines or see dermatologist',
+                'severity': 'low', 'needs_doctor': False
             }
         }
 
-        # Common aliases / synonyms for symptom matching
         aliases = {
             'fever': ['fever', 'temperature', 'high temperature', 'febrile'],
             'cough': ['cough', 'coughing'],
-            'sore throat': ['sore throat', 'throat pain', 'throat soreness'],
-            'runny nose': ['runny nose', 'runny-nose', 'runny'],
-            'sneezing': ['sneeze', 'sneezing'],
-            'congestion': ['congestion', 'stuffy', 'blocked nose', 'nasal congestion'],
             'headache': ['headache', 'head pain', 'migraine'],
-            'nausea': ['nausea', 'nauseous', 'queasy'],
-            'vomiting': ['vomit', 'vomiting', 'throwing up'],
-            'diarrhea': ['diarrhea', 'loose stool', 'runny stools'],
-            'painful urination': ['painful urination', 'burning urine', 'dysuria'],
-            'lower abdominal pain': ['lower abdominal pain', 'lower stomach pain', 'pelvic pain'],
+            'nausea': ['nausea', 'queasy', 'sick to stomach'],
+            'vomit': ['vomit', 'vomiting', 'throwing up'],
+            'diarrhea': ['diarrhea', 'loose stool', 'runny stool'],
+            'sore_throat': ['sore throat', 'throat pain'],
+            'shortness_of_breath': ['shortness of breath', 'breathless', 'dyspnea'],
+            'loss_of_taste': ['loss of taste', 'no taste', 'ageusia'],
+            'loss_of_smell': ['loss of smell', 'no smell', 'anosmia'],
+            'burning_urination': ['painful urination', 'burning urination', 'dysuria'],
+            'abdominal_pain': ['stomach pain', 'abdominal pain', 'belly pain']
         }
 
-        # Build reverse mapping from alias -> canonical symptom
         for canon, vals in aliases.items():
             for v in vals:
                 self.symptom_aliases[v] = canon
 
-        # Also ensure canonical symptoms map to themselves
         for d in self.disease_info.values():
             for s in d['symptoms']:
                 if s not in self.symptom_aliases:
                     self.symptom_aliases[s] = s
 
-    def normalize_text(self, text):
-        if not text:
-            return ''
-        t = text.lower()
-        t = re.sub(r'[^a-z0-9\s]', ' ', t)
-        t = re.sub(r'\s+', ' ', t).strip()
-        return t
+    def _norm(self, s: str) -> str:
+        return re.sub(r'[^a-z0-9\s]', ' ', (s or '').lower()).strip()
 
-    def extract_symptoms(self, text):
-        t = self.normalize_text(text)
-        tokens = t.split()
+    def extract(self, payload):
+        if isinstance(payload, (list, tuple)):
+            items = [str(x) for x in payload if x]
+        else:
+            text = str(payload or '')
+            items = re.split(r'[;,\n\.]+', text)
         found = set()
-
-        # phrase match first (longer aliases)
-        sorted_aliases = sorted(self.symptom_aliases.keys(), key=lambda x: -len(x))
-        for alias in sorted_aliases:
-            if alias in t:
+        cleaned = self._norm(" ".join(items))
+        for alias in sorted(self.symptom_aliases.keys(), key=lambda x: -len(x)):
+            if alias in cleaned:
                 found.add(self.symptom_aliases[alias])
+        return sorted(list(found))
 
-        # token-level approximate match (fallback)
-        for tok in tokens:
-            if tok in self.symptom_aliases:
-                found.add(self.symptom_aliases[tok])
-
-        return list(found)
-
-    def diagnose(self, text):
-        text = text or ''
-        identified = self.extract_symptoms(text)
-
-        if not identified:
+    def diagnose(self, payload):
+        syms = self.extract(payload)
+        if not syms:
             return {
-                'diagnosis': 'Unable to identify specific symptoms. Please provide more detailed description.',
-                'recommendation': 'Consult with a healthcare professional for proper evaluation.',
-                'severity': 'unknown',
-                'needs_doctor': True,
+                'diagnosis': 'No clear symptoms',
                 'confidence': 0.0,
-                'identified_symptoms': []
+                'identified_symptoms': [],
+                'recommendation': 'Please provide more detail.'
             }
 
-        # Score diseases by matched symptoms proportion
         scores = {}
         for key, info in self.disease_info.items():
-            canon_symptoms = set(info['symptoms'])
-            matched = len(canon_symptoms.intersection(set(identified)))
-            if matched > 0:
-                # confidence = matched / number of disease symptoms
-                confidence = matched / len(canon_symptoms)
-                scores[key] = confidence
+            kw = [s for s in info['symptoms']]
+
+            # Require more matches for high-severity diseases
+            matched = len(set(kw).intersection(set(syms)))
+
+            # High-severity diseases need at least 2 matches
+            if info.get('severity') == 'high' and matched < 2:
+                continue
+
+            # medium/low need at least 1 match
+            if matched >= 1:
+                scores[key] = matched / len(kw)
 
         if not scores:
             return {
-                'diagnosis': 'Symptoms not recognized in our database.',
-                'recommendation': 'Please consult with a healthcare professional for proper evaluation.',
-                'severity': 'unknown',
-                'needs_doctor': True,
+                'diagnosis': 'Not found in DB',
                 'confidence': 0.0,
-                'identified_symptoms': identified
+                'identified_symptoms': syms,
+                'recommendation': 'Consider consulting a doctor.'
             }
 
-        # pick top disease
-        top = max(scores.items(), key=lambda x: x[1])
-        disease_key, conf = top
-        info = self.disease_info[disease_key]
+        # pick highest score (tie-break deterministic by key)
+        key, score = max(scores.items(), key=lambda x: (x[1], x[0]))
+        info = self.disease_info[key]
+
+        confidence = round(min(0.99, score * 0.85 + min(0.15, 0.05 * len(syms))), 2)
 
         return {
             'diagnosis': f'Possible {info["name"]}',
             'recommendation': info['treatment'],
-            'severity': info['severity'],
-            'needs_doctor': info['needs_doctor'],
-            'confidence': round(conf, 2),
-            'identified_symptoms': identified
+            'confidence': confidence,
+            'identified_symptoms': syms,
+            'needs_doctor': info['needs_doctor']
         }
 
+local_model = MedicalDiagnosisModelLocal()
 
-# Initialize model
-model = MedicalDiagnosisModel()
+# -------------------------
+# AI wrapper (OpenAI Chat Completion)
+# -------------------------
+def init_openai():
+    # debug prints to help you see env in the terminal (remove in production)
+    print("[debug] OPENAI_AVAILABLE =", OPENAI_AVAILABLE)
+    print("[debug] OPENAI_API_KEY present:", bool(os.environ.get("OPENAI_API_KEY")))
 
+    if not OPENAI_AVAILABLE:
+        return False, "openai package not installed"
+    key = os.environ.get("OPENAI_API_KEY") or os.environ.get("OPENAI_KEY")
+    if not key:
+        return False, "OPENAI_API_KEY not set"
+    openai.api_key = key
+    return True, "ok"
 
-@app.route('/diagnose', methods=['POST'])
-def diagnose():
+def build_prompt(symptoms_text: str) -> str:
+    p = f"""
+You are a clinical-grade assistant that MUST return valid JSON only. Analyze the following patient free-text symptoms and output a JSON object with keys:
+- diagnosis: short diagnosis string (e.g. "Possible Influenza")
+- identified_symptoms: array of short tokens (e.g. ["fever","cough"])
+- confidence: decimal 0.0-1.0
+- recommendation: short next-steps for patient
+- needs_doctor: boolean
+
+Patient symptoms:
+\"\"\"{symptoms_text}\"\"\""
+
+Return JSON only with no explanation or extra text.
+"""
+    return p
+
+def analyze_with_openai(symptoms_text: str, model_name: str = None) -> dict:
+    ok, msg = init_openai()
+    if not ok:
+        raise RuntimeError(msg)
+    model_name = model_name or os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+    prompt = build_prompt(symptoms_text)
+    resp = openai.ChatCompletion.create(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": prompt}],
+    max_tokens=10000,
+    temperature=0.4
+)
+    content = resp.choices[0].message.get("content", "").strip()
+
     try:
-        data = request.get_json() or {}
-        symptoms = data.get('symptoms', '')
+        parsed = json.loads(content)
+    except Exception:
+        import re
+        m = re.search(r'(\{[\s\S]*\})', content)
+        if m:
+            parsed = json.loads(m.group(1))
+        else:
+            raise RuntimeError("AI output not parseable as JSON: " + (content[:1000]))
 
-        if not symptoms or not str(symptoms).strip():
-            return jsonify({'error': 'No symptoms provided'}), 400
+    parsed['confidence'] = float(parsed.get('confidence', 0.0))
+    parsed['identified_symptoms'] = parsed.get('identified_symptoms', []) or []
+    parsed['recommendation'] = parsed.get('recommendation', '')
+    parsed['needs_doctor'] = bool(parsed.get('needs_doctor', False))
+    return parsed
 
-        result = model.diagnose(symptoms)
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({'error': f'Diagnosis error: {str(e)}'}), 500
-
-
+# -------------------------
+# Routes
+# -------------------------
 @app.route('/health', methods=['GET'])
-def health_check():
+def health():
     return jsonify({'status': 'healthy'})
 
+@app.route('/analyze', methods=['POST'])
+def analyze_route():
+    payload = request.get_json() or {}
+    symptoms = payload.get('symptoms') or payload.get('text') or ""
+    symptoms = str(symptoms).strip()
+    if not symptoms:
+        return jsonify({'error': 'No symptoms provided'}), 400
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import re
-import os
-
-# NLTK is optional — prefer pure-python fallback if unavailable
-try:
-    import nltk
-    from nltk.corpus import stopwords
-    from nltk.stem import WordNetLemmatizer
     try:
-        nltk.data.find('corpora/stopwords')
-    except Exception:
-        try:
-            nltk.download('stopwords')
-        except Exception:
-            pass
-    try:
-        nltk.data.find('corpora/wordnet')
-    except Exception:
-        try:
-            nltk.download('wordnet')
-        except Exception:
-            pass
-    lemmatizer = WordNetLemmatizer()
-    stop_words = set(stopwords.words('english'))
-except Exception:
-    lemmatizer = None
-    stop_words = set()
-
-app = Flask(__name__)
-CORS(app)
-
-
-class MedicalDiagnosisModel:
-    def __init__(self):
-        self.disease_info = {}
-        self.symptom_aliases = {}
-        self.load_knowledge_base()
-
-    def load_knowledge_base(self):
-        # Define diseases and canonical symptom keywords
-        self.disease_info = {
-            'common_cold': {
-                'name': 'Common Cold',
-                'symptoms': ['cough', 'sneezing', 'runny nose', 'sore throat', 'congestion'],
-                'treatment': 'Rest, hydration, over-the-counter cold medication',
-                'severity': 'low',
-                'needs_doctor': False
-            },
-            'flu': {
-                'name': 'Influenza (Flu)',
-                'symptoms': ['fever', 'cough', 'sore throat', 'body aches', 'headache', 'fatigue'],
-                'treatment': 'Rest, fluids, antiviral medication if early',
-                'severity': 'medium',
-                'needs_doctor': True
-            },
-            'migraine': {
-                'name': 'Migraine',
-                'symptoms': ['headache', 'nausea', 'sensitivity to light', 'sensitivity to sound'],
-                'treatment': 'Rest in dark room, pain relievers, prescription migraine medication',
-                'severity': 'medium',
-                'needs_doctor': True
-            },
-            'gastroenteritis': {
-                'name': 'Gastroenteritis',
-                'symptoms': ['nausea', 'vomiting', 'diarrhea', 'stomach cramps', 'fever'],
-                'treatment': 'Hydration, bland diet, rest',
-                'severity': 'medium',
-                'needs_doctor': False
-            },
-            'allergies': {
-                'name': 'Allergic Rhinitis',
-                'symptoms': ['sneezing', 'runny nose', 'itchy eyes', 'congestion'],
-                'treatment': 'Antihistamines, nasal sprays, allergen avoidance',
-                'severity': 'low',
-                'needs_doctor': False
-            },
-            'uti': {
-                'name': 'Urinary Tract Infection',
-                'symptoms': ['painful urination', 'frequent urination', 'lower abdominal pain'],
-                'treatment': 'Antibiotics (prescription required)',
-                'severity': 'high',
-                'needs_doctor': True
-            },
-            'sinusitis': {
-                'name': 'Sinus Infection',
-                'symptoms': ['facial pain', 'congestion', 'headache', 'thick nasal discharge'],
-                'treatment': 'Decongestants, nasal irrigation, antibiotics if bacterial',
-                'severity': 'medium',
-                'needs_doctor': True
-            }
-        }
-
-        # Common aliases / synonyms for symptom matching
-        aliases = {
-            'fever': ['fever', 'temperature', 'high temperature', 'febrile'],
-            'cough': ['cough', 'coughing'],
-            'sore throat': ['sore throat', 'throat pain', 'throat soreness'],
-            'runny nose': ['runny nose', 'runny-nose', 'runny'],
-            'sneezing': ['sneeze', 'sneezing'],
-            'congestion': ['congestion', 'stuffy', 'blocked nose', 'nasal congestion'],
-            'headache': ['headache', 'head pain', 'migraine'],
-            'nausea': ['nausea', 'nauseous', 'queasy'],
-            'vomiting': ['vomit', 'vomiting', 'throwing up'],
-            'diarrhea': ['diarrhea', 'loose stool', 'runny stools'],
-            'painful urination': ['painful urination', 'burning urine', 'dysuria'],
-            'lower abdominal pain': ['lower abdominal pain', 'lower stomach pain', 'pelvic pain'],
-        }
-
-        # Build reverse mapping from alias -> canonical symptom
-        for canon, vals in aliases.items():
-            for v in vals:
-                self.symptom_aliases[v] = canon
-
-        # Also ensure canonical symptoms map to themselves
-        for d in self.disease_info.values():
-            for s in d['symptoms']:
-                if s not in self.symptom_aliases:
-                    self.symptom_aliases[s] = s
-
-    def normalize_text(self, text):
-        if not text:
-            return ''
-        t = text.lower()
-        t = re.sub(r'[^a-z0-9\\s]', ' ', t)
-        t = re.sub(r'\\s+', ' ', t).strip()
-        return t
-
-    def extract_symptoms(self, text):
-        t = self.normalize_text(text)
-        tokens = t.split()
-        found = set()
-
-        # phrase match first (longer aliases)
-        sorted_aliases = sorted(self.symptom_aliases.keys(), key=lambda x: -len(x))
-        for alias in sorted_aliases:
-            if alias in t:
-                found.add(self.symptom_aliases[alias])
-
-        # token-level approximate match (fallback)
-        for tok in tokens:
-            if tok in self.symptom_aliases:
-                found.add(self.symptom_aliases[tok])
-
-        return list(found)
-
-    def diagnose(self, text):
-        text = text or ''
-        identified = self.extract_symptoms(text)
-
-        if not identified:
-            return {
-                'diagnosis': 'Unable to identify specific symptoms. Please provide more detailed description.',
-                'recommendation': 'Consult with a healthcare professional for proper evaluation.',
-                'severity': 'unknown',
-                'needs_doctor': True,
-                'confidence': 0.0,
-                'identified_symptoms': []
-            }
-
-        # Score diseases by matched symptoms proportion
-        scores = {}
-        for key, info in self.disease_info.items():
-            canon_symptoms = set(info['symptoms'])
-            matched = len(canon_symptoms.intersection(set(identified)))
-            if matched > 0:
-                # confidence = matched / number of disease symptoms
-                confidence = matched / len(canon_symptoms)
-                scores[key] = confidence
-
-        if not scores:
-            return {
-                'diagnosis': 'Symptoms not recognized in our database.',
-                'recommendation': 'Please consult with a healthcare professional for proper evaluation.',
-                'severity': 'unknown',
-                'needs_doctor': True,
-                'confidence': 0.0,
-                'identified_symptoms': identified
-            }
-
-        # pick top disease
-        top = max(scores.items(), key=lambda x: x[1])
-        disease_key, conf = top
-        info = self.disease_info[disease_key]
-
-        return {
-            'diagnosis': f'Possible {info["name"]}',
-            'recommendation': info['treatment'],
-            'severity': info['severity'],
-            'needs_doctor': info['needs_doctor'],
-            'confidence': round(conf, 2),
-            'identified_symptoms': identified
-        }
-
-
-# Initialize model
-model = MedicalDiagnosisModel()
-
-
-@app.route('/diagnose', methods=['POST'])
-def diagnose():
-    try:
-        data = request.get_json() or {}
-        symptoms = data.get('symptoms', '')
-
-        if not symptoms or not str(symptoms).strip():
-            return jsonify({'error': 'No symptoms provided'}), 400
-
-        result = model.diagnose(symptoms)
-        return jsonify(result)
+        ai_enabled, reason = init_openai()
+        if ai_enabled:
+            try:
+                ai_result = analyze_with_openai(symptoms)
+                return jsonify({
+                    "source": "ai",
+                    "diagnosis": ai_result.get('diagnosis', 'Unknown'),
+                    "identified_symptoms": ai_result.get('identified_symptoms', []),
+                    "confidence": ai_result.get('confidence', 0.0),
+                    "recommendation": ai_result.get('recommendation', ''),
+                    "needs_doctor": bool(ai_result.get('needs_doctor', False))
+                })
+            except Exception as e:
+                print("[ml_service] AI analyze error:", e)
+        else:
+            print("[ml_service] AI skipped:", reason)
     except Exception as e:
-        return jsonify({'error': f'Diagnosis error: {str(e)}'}), 500
+        print("[ml_service] AI init error:", e)
 
+    local = local_model.diagnose(symptoms)
+    return jsonify({
+        "source": "local",
+        "diagnosis": local.get('diagnosis'),
+        "identified_symptoms": local.get('identified_symptoms', []),
+        "confidence": local.get('confidence', 0.0),
+        "recommendation": local.get('recommendation', ''),
+        "needs_doctor": local.get('needs_doctor', False)
+    })
 
-@app.route('/health', methods=['GET'])
-def health_check():
-    return jsonify({'status': 'healthy'})
+@app.route('/chat', methods=['POST'])
+def chat_route():
+    payload = request.get_json() or {}
+    user_message = payload.get("message", "").strip()
+    if not user_message:
+        return jsonify({"reply": "Please enter a message."})
 
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import pandas as pd
-import numpy as np
-import joblib
-import re
-import nltk
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-import sqlite3
-import os
-
-# Download NLTK data (best-effort; continue if offline)
-try:
-    nltk.download('stopwords')
-    nltk.download('wordnet')
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import re
-import os
-
-# NLTK is optional — prefer pure-python fallback if unavailable
-try:
-    import nltk
-    from nltk.corpus import stopwords
-    from nltk.stem import WordNetLemmatizer
     try:
-        nltk.data.find('corpora/stopwords')
-    except Exception:
-        try:
-            nltk.download('stopwords')
-        except Exception:
-            pass
-    try:
-        nltk.data.find('corpora/wordnet')
-    except Exception:
-        try:
-            nltk.download('wordnet')
-        except Exception:
-            pass
-    lemmatizer = WordNetLemmatizer()
-    stop_words = set(stopwords.words('english'))
-except Exception:
-    lemmatizer = None
-    stop_words = set()
+        messages = [
+            {"role": "system", "content": "You are a friendly medical assistant. Always respond helpfully and safely."},
+            {"role": "user", "content": user_message}
+        ]
 
-app = Flask(__name__)
-CORS(app)
+        resp = openai.ChatCompletion.create(
+            model="gpt-4o-mini",
+            messages=messages,
+            temperature=0.6,
+            max_tokens=300
+        )
 
+        reply = resp.choices[0].message['content'].strip()
+        return jsonify({"reply": reply})
 
-class MedicalDiagnosisModel:
-    def __init__(self):
-        self.disease_info = {}
-        self.symptom_aliases = {}
-        self.load_knowledge_base()
-
-    def load_knowledge_base(self):
-        # Define diseases and canonical symptom keywords
-        self.disease_info = {
-            'common_cold': {
-                'name': 'Common Cold',
-                'symptoms': ['cough', 'sneezing', 'runny nose', 'sore throat', 'congestion'],
-                'treatment': 'Rest, hydration, over-the-counter cold medication',
-                'severity': 'low',
-                'needs_doctor': False
-            },
-            'flu': {
-                'name': 'Influenza (Flu)',
-                'symptoms': ['fever', 'cough', 'sore throat', 'body aches', 'headache', 'fatigue'],
-                'treatment': 'Rest, fluids, antiviral medication if early',
-                'severity': 'medium',
-                'needs_doctor': True
-            },
-            'migraine': {
-                'name': 'Migraine',
-                'symptoms': ['headache', 'nausea', 'sensitivity to light', 'sensitivity to sound'],
-                'treatment': 'Rest in dark room, pain relievers, prescription migraine medication',
-                'severity': 'medium',
-                'needs_doctor': True
-            },
-            'gastroenteritis': {
-                'name': 'Gastroenteritis',
-                'symptoms': ['nausea', 'vomiting', 'diarrhea', 'stomach cramps', 'fever'],
-                'treatment': 'Hydration, bland diet, rest',
-                'severity': 'medium',
-                'needs_doctor': False
-            },
-            'allergies': {
-                'name': 'Allergic Rhinitis',
-                'symptoms': ['sneezing', 'runny nose', 'itchy eyes', 'congestion'],
-                'treatment': 'Antihistamines, nasal sprays, allergen avoidance',
-                'severity': 'low',
-                'needs_doctor': False
-            },
-            'uti': {
-                'name': 'Urinary Tract Infection',
-                'symptoms': ['painful urination', 'frequent urination', 'lower abdominal pain'],
-                'treatment': 'Antibiotics (prescription required)',
-                'severity': 'high',
-                'needs_doctor': True
-            },
-            'sinusitis': {
-                'name': 'Sinus Infection',
-                'symptoms': ['facial pain', 'congestion', 'headache', 'thick nasal discharge'],
-                'treatment': 'Decongestants, nasal irrigation, antibiotics if bacterial',
-                'severity': 'medium',
-                'needs_doctor': True
-            }
-        }
-
-        # Common aliases / synonyms for symptom matching
-        aliases = {
-            'fever': ['fever', 'temperature', 'high temperature', 'febrile'],
-            'cough': ['cough', 'coughing'],
-            'sore throat': ['sore throat', 'throat pain', 'throat soreness'],
-            'runny nose': ['runny nose', 'runny-nose', 'runny'],
-            'sneezing': ['sneeze', 'sneezing'],
-            'congestion': ['congestion', 'stuffy', 'blocked nose', 'nasal congestion'],
-            'headache': ['headache', 'head pain', 'migraine'],
-            'nausea': ['nausea', 'nauseous', 'queasy'],
-            'vomiting': ['vomit', 'vomiting', 'throwing up'],
-            'diarrhea': ['diarrhea', 'loose stool', 'runny stools'],
-            'painful urination': ['painful urination', 'burning urine', 'dysuria'],
-            'lower abdominal pain': ['lower abdominal pain', 'lower stomach pain', 'pelvic pain'],
-        }
-
-        # Build reverse mapping from alias -> canonical symptom
-        for canon, vals in aliases.items():
-            for v in vals:
-                self.symptom_aliases[v] = canon
-
-        # Also ensure canonical symptoms map to themselves
-        for d in self.disease_info.values():
-            for s in d['symptoms']:
-                if s not in self.symptom_aliases:
-                    self.symptom_aliases[s] = s
-
-    def normalize_text(self, text):
-        if not text:
-            return ''
-        t = text.lower()
-        t = re.sub(r'[^a-z0-9\s]', ' ', t)
-        t = re.sub(r'\s+', ' ', t).strip()
-        return t
-
-    def extract_symptoms(self, text):
-        t = self.normalize_text(text)
-        tokens = t.split()
-        found = set()
-
-        # phrase match first (longer aliases)
-        sorted_aliases = sorted(self.symptom_aliases.keys(), key=lambda x: -len(x))
-        for alias in sorted_aliases:
-            if alias in t:
-                found.add(self.symptom_aliases[alias])
-
-        # token-level approximate match (fallback)
-        for tok in tokens:
-            if tok in self.symptom_aliases:
-                found.add(self.symptom_aliases[tok])
-
-        return list(found)
-
-    def diagnose(self, text):
-        text = text or ''
-        identified = self.extract_symptoms(text)
-
-        if not identified:
-            return {
-                'diagnosis': 'Unable to identify specific symptoms. Please provide more detailed description.',
-                'recommendation': 'Consult with a healthcare professional for proper evaluation.',
-                'severity': 'unknown',
-                'needs_doctor': True,
-                'confidence': 0.0,
-                'identified_symptoms': []
-            }
-
-        # Score diseases by matched symptoms proportion
-        scores = {}
-        for key, info in self.disease_info.items():
-            canon_symptoms = set(info['symptoms'])
-            matched = len(canon_symptoms.intersection(set(identified)))
-            if matched > 0:
-                # confidence = matched / number of disease symptoms
-                confidence = matched / len(canon_symptoms)
-                scores[key] = confidence
-
-        if not scores:
-            return {
-                'diagnosis': 'Symptoms not recognized in our database.',
-                'recommendation': 'Please consult with a healthcare professional for proper evaluation.',
-                'severity': 'unknown',
-                'needs_doctor': True,
-                'confidence': 0.0,
-                'identified_symptoms': identified
-            }
-
-        # pick top disease
-        top = max(scores.items(), key=lambda x: x[1])
-        disease_key, conf = top
-        info = self.disease_info[disease_key]
-
-        return {
-            'diagnosis': f'Possible {info["name"]}',
-            'recommendation': info['treatment'],
-            'severity': info['severity'],
-            'needs_doctor': info['needs_doctor'],
-            'confidence': round(conf, 2),
-            'identified_symptoms': identified
-        }
-
-
-# Initialize model
-model = MedicalDiagnosisModel()
-
-
-@app.route('/diagnose', methods=['POST'])
-def diagnose():
-    try:
-        data = request.get_json() or {}
-        symptoms = data.get('symptoms', '')
-
-        if not symptoms or not str(symptoms).strip():
-            return jsonify({'error': 'No symptoms provided'}), 400
-
-        result = model.diagnose(symptoms)
-        return jsonify(result)
     except Exception as e:
-        return jsonify({'error': f'Diagnosis error: {str(e)}'}), 500
+        print("[chat] AI error:", e)
+        return jsonify({"reply": "I'm here to help! Could you describe your symptoms or question?"})
 
+# backwards-compat / older endpoints
+@app.route('/diagnose', methods=['POST'])
+def diagnose_route():
+    return analyze_route()
 
-@app.route('/health', methods=['GET'])
-def health_check():
-    return jsonify({'status': 'healthy'})
+# -------------------------
+# socket handlers
+# -------------------------
+@socketio.on('connect')
+def _on_connect():
+    emit('connected', {'ok': True})
 
+@socketio.on('join')
+def _on_join(data):
+    room = data.get('room')
+    if room:
+        join_room(room)
+        emit('joined', {'room': room}, to=room)
 
+@socketio.on('diagnose')
+def _socket_diagnose(data):
+    room = data.get('room')
+    symptoms = data.get('symptoms')
+    try:
+        ai_enabled, _ = init_openai()
+        if ai_enabled:
+            parsed = analyze_with_openai(symptoms)
+            result = {
+                "diagnosis": parsed.get('diagnosis'),
+                "identified_symptoms": parsed.get('identified_symptoms', []),
+                "confidence": parsed.get('confidence', 0.0),
+                "recommendation": parsed.get('recommendation',''),
+                "needs_doctor": bool(parsed.get('needs_doctor', False))
+            }
+        else:
+            local = local_model.diagnose(symptoms)
+            result = {
+                "diagnosis": local.get('diagnosis'),
+                "identified_symptoms": local.get('identified_symptoms', []),
+                "confidence": local.get('confidence', 0.0),
+                "recommendation": local.get('recommendation',''),
+                "needs_doctor": local.get('needs_doctor', False)
+            }
+    except Exception as e:
+        print("[ml_service] socket analyze error:", e)
+        local = local_model.diagnose(symptoms)
+        result = {
+            "diagnosis": local.get('diagnosis'),
+            "identified_symptoms": local.get('identified_symptoms', []),
+            "confidence": local.get('confidence', 0.0),
+            "recommendation": local.get('recommendation',''),
+            "needs_doctor": local.get('needs_doctor', False)
+        }
+
+    if room:
+        emit('diagnosis_result', result, to=room)
+    else:
+        emit('diagnosis_result', result)
+
+# -------------------------
+# run
+# -------------------------
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    port = int(os.environ.get('ML_PORT', 5000))
+    print(f"[ml_service] Starting on 0.0.0.0:{port}")
+    try:
+        socketio.run(app, host='0.0.0.0', port=port)
+    except Exception as e:
+        print(f"[ml_service] start error: {e}")

@@ -5,27 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Appointments - MediDiag</title>
     <link rel="stylesheet" href="/main/main.css">
+    <link rel="stylesheet" href="/patient/appointments.css">
     <link rel="stylesheet" href="/navbar/navbar.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <%- include('../headers/preloginheader') %>
+    <%- include('../headers/launchheader') %>
     
+    <!-- Medical Background Elements -->
+    <div class="medical-background">
+        <i class="fas fa-heart medical-icon heart"></i>
+        <i class="fas fa-stethoscope medical-icon stethoscope"></i>
+        <i class="fas fa-pills medical-icon pill"></i>
+        <i class="fas fa-hospital medical-icon hospital"></i>
+        <i class="fas fa-clock medical-icon time"></i>
+        <i class="fas fa-calendar-check medical-icon clipboard"></i>
+    </div>
+
     <div class="container patient-dashboard">
         <div class="dashboard-grid">
             <aside class="sidebar">
+                <div class="sidebar-header">
+                    <div class="user-avatar-large">
+                        <%= patient.full_name ? patient.full_name.charAt(0).toUpperCase() : 'P' %>
+                    </div>
+                    <h3><%= patient.full_name %></h3>
+                    <p>Patient ID: <%= patient.id %></p>
+                </div>
                 <nav class="sidebar-nav">
                     <ul>
-                        <li><a href="/patient/dashboard">Dashboard</a></li>
-                        <li><a href="/patient/doctors">Find Doctors</a></li>
-                        <li><a href="/patient/appointments" class="active">My Appointments</a></li>
-                        <li><a href="/patient/profile">Profile</a></li>
-                        <li><a href="/auth/logout">Logout</a></li>
+                        <li>
+                            <a href="/patient/dashboard">
+                                <i class="fas fa-tachometer-alt"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/patient/doctors">
+                                <i class="fas fa-user-md"></i>
+                                Find Doctors
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/patient/appointments" class="active">
+                                <i class="fas fa-calendar-check"></i>
+                                My Appointments
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/patient/profile">
+                                <i class="fas fa-user"></i>
+                                Profile
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/auth/logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Logout
+                            </a>
+                        </li>
                     </ul>
                 </nav>
             </aside>
 
             <main class="dashboard-content">
-                <h1>My Appointments</h1>
+                <h1><i class="fas fa-calendar-check"></i> My Appointments</h1>
                 
                 <div class="appointments-list">
                     <% if (appointments.length > 0) { %>
@@ -60,17 +104,29 @@
                                 
                                 <% if (appointment.status === 'scheduled') { %>
                                     <div class="appointment-actions">
-                                        <button class="btn btn-outline cancel-btn" data-appointment-id="<%= appointment.id %>">Cancel Appointment</button>
-                                        <button class="btn btn-primary reschedule-btn" data-appointment-id="<%= appointment.id %>">Reschedule</button>
+                                        <button class="btn btn-outline cancel-btn" data-appointment-id="<%= appointment.id %>">
+                                            <i class="fas fa-times"></i>
+                                            Cancel Appointment
+                                        </button>
+                                        <button class="btn btn-primary reschedule-btn" data-appointment-id="<%= appointment.id %>">
+                                            <i class="fas fa-calendar-alt"></i>
+                                            Reschedule
+                                        </button>
                                     </div>
                                 <% } %>
                             </div>
                         <% }); %>
                     <% } else { %>
-                        <div class="card" style="text-align: center; padding: 60px 40px;">
-                            <h3>No Appointments Yet</h3>
-                            <p>You haven't booked any appointments yet.</p>
-                            <a href="/patient/doctors" class="btn btn-primary">Find Doctors</a>
+                        <div class="card empty-appointments">
+                            <div class="empty-state">
+                                <i class="fas fa-calendar-plus"></i>
+                                <h3>No Appointments Yet</h3>
+                                <p>You haven't booked any appointments yet.</p>
+                                <a href="/patient/doctors" class="btn btn-primary">
+                                    <i class="fas fa-user-md"></i>
+                                    Find Doctors
+                                </a>
+                            </div>
                         </div>
                     <% } %>
                 </div>
@@ -78,15 +134,204 @@
         </div>
     </div>
 
+    <style>
+        .appointments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .appointment-card {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .appointment-card:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medical);
+        }
+
+        .appointment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .appointment-header h3 {
+            color: var(--text-lighter);
+            margin-bottom: 5px;
+            font-size: 1.3rem;
+        }
+
+        .specialization {
+            color: var(--medical-blue);
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .appointment-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .status-scheduled {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--medical-blue);
+        }
+
+        .status-completed {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--medical-green);
+        }
+
+        .status-cancelled {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .appointment-details {
+            margin-bottom: 20px;
+        }
+
+        .appointment-details p {
+            margin-bottom: 10px;
+            color: var(--text-light);
+            line-height: 1.5;
+        }
+
+        .appointment-details strong {
+            color: var(--text-lighter);
+        }
+
+        .prescription {
+            margin-top: 15px;
+            padding: 15px;
+            background: var(--bg-darker);
+            border-radius: 8px;
+            border-left: 4px solid var(--medical-green);
+        }
+
+        .prescription pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: var(--text-light);
+            margin-top: 8px;
+            font-family: inherit;
+        }
+
+        .appointment-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .appointment-actions .btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            padding: 10px 20px;
+        }
+
+        .empty-appointments {
+            text-align: center;
+            padding: 60px 40px;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+            color: var(--medical-blue);
+        }
+
+        .empty-state h3 {
+            color: var(--text-lighter);
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        .empty-state p {
+            color: var(--text-dark);
+            margin-bottom: 25px;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .appointment-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+
+            .appointment-actions {
+                flex-direction: column;
+            }
+
+            .appointment-actions .btn {
+                justify-content: center;
+            }
+        }
+    </style>
+<script src="/navbar/navbar.js"></script>
     <script>
         // Attach handlers to buttons using data-appointment-id to avoid inline EJS in onclick attributes
         document.addEventListener('DOMContentLoaded', function () {
             document.querySelectorAll('.cancel-btn').forEach(function (btn) {
-                btn.addEventListener('click', function () {
+                btn.addEventListener('click', async function () {
                     var appointmentId = this.getAttribute('data-appointment-id');
-                    if (confirm('Are you sure you want to cancel this appointment?')) {
-                        // In real app, make API call to cancel appointment
-                        alert('Appointment cancellation feature would be implemented here for id: ' + appointmentId);
+                    if (!confirm('Are you sure you want to cancel this appointment?')) return;
+
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling...';
+                    this.disabled = true;
+
+                    try {
+                        const res = await fetch('/patient/cancel-appointment', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ appointment_id: appointmentId })
+                        });
+                        const json = await res.json();
+                        if (res.ok && json.success) {
+                            // remove the appointment card from the DOM
+                            const card = this.closest('.appointment-card');
+                            if (card) card.remove();
+                            // if there are no more appointment cards, show the empty state
+                            if (!document.querySelector('.appointment-card')) {
+                                document.querySelector('.appointments-list').innerHTML = `
+                                    <div class="card empty-appointments">
+                                        <div class="empty-state">
+                                            <i class="fas fa-calendar-plus"></i>
+                                            <h3>No Appointments Yet</h3>
+                                            <p>You haven't booked any appointments yet.</p>
+                                            <a href="/patient/doctors" class="btn btn-primary">
+                                                <i class="fas fa-user-md"></i>
+                                                Find Doctors
+                                            </a>
+                                        </div>
+                                    </div>`;
+                            }
+                        } else {
+                            alert('Failed to cancel appointment: ' + (json.error || json.message || 'Unknown error'));
+                            this.innerHTML = originalText;
+                            this.disabled = false;
+                        }
+                    } catch (err) {
+                        console.error('Cancel error', err);
+                        alert('Failed to cancel appointment. Try again later.');
+                        this.innerHTML = originalText;
+                        this.disabled = false;
                     }
                 });
             });

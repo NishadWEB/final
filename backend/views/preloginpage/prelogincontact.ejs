@@ -7,52 +7,107 @@
     <link rel="stylesheet" href="/main/main.css">
     <link rel="stylesheet" href="/navbar/navbar.css">
     <link rel="stylesheet" href="/contact/contact.css">
+    <link rel="stylesheet" href="/footer/footer.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <%- include('../headers/preloginheader') %>
+    <div class="medical-background"></div>
     
-    <section class="contact-hero">
-        <div class="container">
-            <h1>Contact Us</h1>
-            <p>Get in touch with our team</p>
-        </div>
-    </section>
+    <main>
+        <section class="contact-hero">
+            <div class="contact-hero-container">
+                <h1>Contact Us</h1>
+                <p>Get in touch with our team. We're here to answer any questions you may have.</p>
+            </div>
+        </section>
 
-    <section class="contact-content">
-        <div class="container">
-            <!-- Same content as launchpage/contact.ejs -->
-            <div class="contact-grid">
-                <div class="contact-info">
-                    <h2>Get In Touch</h2>
-                    <div class="contact-method">
-                        <div class="contact-icon">✉️</div>
-                        <div>
-                            <h3>Email Us</h3>
-                            <p>medi.diag@gmail.com</p>
+        <section class="contact-content">
+            <div class="container">
+                <div class="contact-grid">
+                    <div class="contact-info animate-on-scroll">
+                        <h2>Get In Touch</h2>
+                        
+                        <div class="contact-method">
+                            <div class="contact-icon"><i class="fas fa-envelope"></i></div>
+                            <div>
+                                <h3>Email Us</h3>
+                                <p>medidiag@gmail.com</p>
+                                <small>We typically respond within 24 hours</small>
+                            </div>
+                        </div>
+
+                        <div class="contact-method">
+                            <div class="contact-icon"><i class="fas fa-phone"></i></div>
+                            <div>
+                                <h3>Call Us</h3>
+                                <p>+91 8073103243  +91 6363734957</p>
+                                <small>Available Monday - Friday, 9AM - 9PM</small>
+                            </div>
+                        </div>
+
+                        <div class="contact-method">
+                            <div class="contact-icon"><i class="fas fa-comments"></i></div>
+                            <div>
+                                <h3>General Inquiries</h3>
+                                <p>For general questions about our platform, features, or how to get started</p>
+                            </div>
+                        </div>
+
+                        <div class="contact-method">
+                            <div class="contact-icon"><i class="fas fa-tools"></i></div>
+                            <div>
+                                <h3>Technical Support</h3>
+                                <p>Need help with our platform? Our technical team is ready to assist you</p>
+                            </div>
                         </div>
                     </div>
-                    <div class="contact-method">
-                        <div class="contact-icon">📞</div>
-                        <div>
-                            <h3>Call Us</h3>
-                            <p>+91 1234567891</p>
-                        </div>
+
+                    <div class="contact-form animate-on-scroll">
+                        <h2>Send us a Message</h2>
+                        <% if (typeof success !== 'undefined') { %>
+                            <div class="alert alert-success"><%= success %></div>
+                        <% } %>
+                        <% if (typeof error !== 'undefined') { %>
+                            <div class="alert alert-error"><%= error %></div>
+                        <% } %>
+                        <form action="/contact" method="POST">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Full Name</label>
+                                    <input type="text" name="full_name" class="form-control" placeholder="Enter your full name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Email Address</label>
+                                    <input type="email" name="email" class="form-control" placeholder="Enter your email address" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Subject</label>
+                                <input type="text" name="subject" class="form-control" placeholder="What is this regarding?" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Your Message</label>
+                                <textarea name="message" class="form-control" rows="6" placeholder="Tell us how we can help you..." required></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i>
+                                Send Message
+                            </button>
+                        </form>
                     </div>
-                </div>
-                <div class="contact-form">
-                    <h2>Send us a Message</h2>
-                    <form>
-                        <div class="form-group">
-                            <label class="form-label">Your Message</label>
-                            <textarea class="form-control" rows="6" placeholder="Tell us how we can help you..."></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Send Message</button>
-                    </form>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+    </main>
 
     <%- include('../main/footer') %>
+    
+    <script src="/navbar/navbar.js"></script>
+    <script src="/homepage/launchpage.js"></script>
+    <script src="/scrollbutton/scrollbutton.js"></script>
 </body>
 </html>

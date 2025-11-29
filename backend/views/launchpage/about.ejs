@@ -7,12 +7,15 @@
     <link rel="stylesheet" href="/main/main.css">
     <link rel="stylesheet" href="/navbar/navbar.css">
     <link rel="stylesheet" href="/about/about.css">
+    <link rel="stylesheet" href="/footer/footer.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <%- include('../headers/launchheader') %>
-    
+    <div class="medical-background"></div>
+    <main>
     <section class="about-hero">
-        <div class="container">
+        <div class="about-hero-container">
             <h1>About MediDiag</h1>
             <p>Bridging the gap between patients and healthcare professionals through innovative technology</p>
         </div>
@@ -21,42 +24,42 @@
     <section class="about-content">
         <div class="container">
             <div class="mission-vision">
-                <div class="mission-card">
+                <div class="mission-card animate-on-scroll">
                     <h2>Our Mission</h2>
                     <p>To make preliminary healthcare diagnosis accessible, reliable, and efficient for everyone. We strive to connect patients with qualified healthcare professionals through our secure platform, reducing wait times and improving healthcare outcomes.</p>
                 </div>
-                <div class="vision-card">
+                <div class="vision-card animate-on-scroll">
                     <h2>Our Vision</h2>
                     <p>To become the most trusted digital healthcare platform that revolutionizes how people access medical consultations, making quality healthcare available to anyone, anywhere, at any time.</p>
                 </div>
             </div>
 
             <div class="motive-section">
-                <h2 style="text-align: center; margin-bottom: 40px;">Our Motive</h2>
+                <h2 style="text-align: center; margin-bottom: 40px; color: var(--text-lighter);">Our Motive</h2>
                 <div class="card" style="max-width: 800px; margin: 0 auto;">
-                    <p style="font-size: 1.125rem; line-height: 1.7;">
+                    <p style="font-size: 1.125rem; line-height: 1.7;color: var(--text-lighter);">
                         We understand the frustration patients face when waiting for medical consultations, especially during emergencies. Our system is designed to streamline patient flow, reducing long waits and ensuring that each patient receives attention in an organized manner. For urgent cases, we prioritize emergencies so that critical patients are seen immediately, without delay.
                     </p>
-                    <p style="font-size: 1.125rem; line-height: 1.7; margin-top: 20px;">
+                    <p style="font-size: 1.125rem; line-height: 1.7; margin-top: 20px;color: var(--text-lighter);">
                         By combining medical expertise with technology, MediDiag provides quick preliminary assessments while maintaining the highest standards of privacy and security, ensuring that every patient feels safe and cared for—whether it's a routine consultation or an emergency.
                     </p>
                 </div>
             </div>
 
             <div class="values-section" style="margin-top: 80px;">
-                <h2 style="text-align: center; margin-bottom: 40px;">Our Values</h2>
+                <h2 style="text-align: center; margin-bottom: 40px; color: var(--text-lighter);">Our Values</h2>
                 <div class="values-grid">
-                    <div class="value-card">
+                    <div class="value-card animate-on-scroll">
                         <div class="value-icon">❤️</div>
                         <h3>Patient-Centric</h3>
                         <p>Every feature and decision is made with our users' health and wellbeing as the top priority.</p>
                     </div>
-                    <div class="value-card">
+                    <div class="value-card animate-on-scroll">
                         <div class="value-icon">⚡</div>
                         <h3>Efficiency</h3>
                         <p>Streamlining the diagnostic process to save time for both patients and healthcare providers.</p>
                     </div>
-                    <div class="value-card">
+                    <div class="value-card animate-on-scroll">
                         <div class="value-icon">🤝</div>
                         <h3>Collaboration</h3>
                         <p>Fostering strong partnerships between patients and healthcare professionals.</p>
@@ -65,9 +68,12 @@
             </div>
         </div>
     </section>
+    </main>
 
     <%- include('../main/footer') %>
     
     <script src="/navbar/navbar.js"></script>
+    <script src="/homepage/launchpage.js"></script>
+    <script src="/scrollbutton/scrollbutton.js"></script>
 </body>
 </html>

@@ -1,0 +1,72 @@
+<%- include('../headers/preloginheader') %>
+<main class="container">
+  <h2>Chat with Patient <%= patientId %></h2>
+
+  <div id="messages" style="border:1px solid #ddd;padding:10px;max-height:400px;overflow:auto;background:#fff;">
+    <% if (messages && messages.length) { %>
+      <% messages.forEach(m => { %>
+        <div class="msg <%= m.sender %>"><strong><%= m.sender %>:</strong> <%= m.text %> <small><%= new Date(m.timestamp).toLocaleString() %></small></div>
+      <% }) %>
+    <% } else { %>
+      <p>No messages yet.</p>
+    <% } %>
+  </div>
+
+  <form id="sendForm">
+    <textarea id="msgText" name="text" rows="3" style="width:100%" placeholder="Write a message to patient..."></textarea>
+    <button type="submit">Send</button>
+  </form>
+
+  <script id="PAGE_DATA" type="application/json"><%= JSON.stringify({ patientId: patientId, user: user }) %></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/frontend/doctor/chat.js"></script>
+</main>
+<%- include('../main/footer') %>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Chat with <%= patientId %></title>
+  <link rel="stylesheet" href="/main/main.css">
+</head>
+<body>
+  <h1>Chat with Patient <%= patientId %></h1>
+  <div id="chat-messages">
+    <% (messages || []).forEach(m => { %>
+      <div class="message <%= m.sender %>">
+        <strong><%= m.sender %>:</strong> <%= m.text %> <small>(<%= m.timestamp %>)</small>
+      </div>
+    <% }); %>
+  </div>
+
+  <form id="doctor-send" method="post" action="/doctor/chats/<%= patientId %>/message">
+    <input type="text" name="text" id="doctor-text" placeholder="Type message..." />
+    <button type="submit">Send</button>
+  </form>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const patientId = '<%= patientId %>';
+    socket.on('connect', () => {
+      socket.emit('join-patient', patientId);
+    });
+
+    socket.on('chat-message', (m) => {
+      const el = document.createElement('div');
+      el.className = 'message ' + m.sender;
+      el.innerHTML = `<strong>${m.sender}:</strong> ${m.text} <small>(${m.timestamp})</small>`;
+      document.getElementById('chat-messages').appendChild(el);
+    });
+
+    document.getElementById('doctor-send').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = document.getElementById('doctor-text').value.trim();
+      if (!text) return;
+      const res = await fetch(`/doctor/chats/${patientId}/message`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ text }) });
+      const j = await res.json();
+      if (j.success) document.getElementById('doctor-text').value = '';
+    });
+  </script>
+</body>
+</html>

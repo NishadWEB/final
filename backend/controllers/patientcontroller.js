@@ -180,3 +180,22 @@ exports.cancelAppointment = async (req, res) => {
     res.status(500).json({ error: 'Failed to cancel appointment' });
   }
 };
+
+
+exports.rescheduleAppointment = async (req, res) => {
+    try {
+        const { appointment_id, new_date } = req.body;
+
+        const updated = await Appointment.rescheduleAppot(appointment_id, new_date);
+
+        if (!updated) {
+            return res.json({ success: false, error: "No appointment found" });
+        }
+
+        return res.json({ success: true });
+
+    } catch (error) {
+        console.error("Reschedule error:", error);
+        return res.json({ success: false });
+    }
+};

@@ -29,10 +29,24 @@ class RegisterForm {
         const roleInputs = document.querySelectorAll('input[name="role"]');
         const roleSelection = document.querySelector('.role-selection');
         
-        // Disable all radio buttons
+        // Disable all radio buttons (visual lock). Disabled radios won't be
+        // submitted with the form, so add a hidden input to ensure the role
+        // value reaches the server.
         roleInputs.forEach(input => {
             input.disabled = true;
         });
+
+        // Ensure there is a fallback hidden input so the role value is included in POST
+        const existingHidden = document.querySelector('input[type="hidden"][name="role"]');
+        if (!existingHidden) {
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'role';
+            hidden.value = selectedRole;
+            // Prefer to append right after the radio group so it is inside the form
+            const form = document.getElementById('register-form');
+            if (form) form.appendChild(hidden);
+        }
         
         // Add locked message
         const lockedMessage = document.createElement('div');
@@ -163,7 +177,7 @@ class RegisterForm {
     }
 
     validatePasswordMatch(passwordInput, confirmInput) {
-        if (passwordInput.value !== confirmPassword.value) {
+        if (passwordInput.value !== confirmInput.value) {
             confirmInput.style.borderColor = '#ef4444';
         } else {
             confirmInput.style.borderColor = '#10b981';
@@ -173,7 +187,9 @@ class RegisterForm {
     validateForm(e) {
         const password = document.getElementById('password');
         const confirmPassword = document.getElementById('confirm_password');
-        const roleSelected = document.querySelector('input[name="role"]:checked');
+        // If radios are locked and disabled, the value may be in a hidden input
+        const roleSelected = document.querySelector('input[name="role"]:checked')
+            || document.querySelector('input[type="hidden"][name="role"]');
         
         if (!roleSelected) {
             e.preventDefault();

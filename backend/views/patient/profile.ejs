@@ -94,6 +94,13 @@
                                 <div class="form-group">
                                     <label class="form-label">Date of Birth</label>
                                     <input type="date" name="date_of_birth" class="form-control" value="<%= patient.date_of_birth %>">
+                                    
+                                    <% 
+                                        const dob = new Date(patient.date_of_birth);
+                                        const formattedDOB = dob.toDateString(); 
+                                    %>
+
+                                    <p>Actual DOB: <strong><%= formattedDOB %></strong></p>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Gender</label>
@@ -130,7 +137,7 @@
                     </div>
                 </div>
 
-                <div class="security-section" style="margin-top: 40px;">
+                <!-- <div class="security-section" style="margin-top: 40px;">
                     <div class="card">
                         <div class="section-header">
                             <h2><i class="fas fa-shield-alt"></i> Security</h2>
@@ -141,7 +148,7 @@
                             Change Password
                         </button>
                     </div>
-                </div>
+                </div> -->
             </main>
         </div>
     </div>
@@ -218,47 +225,79 @@
             }
         }
 
-        document.getElementById('profile-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const form = e.target;
-            const submitBtn = form.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
-            submitBtn.disabled = true;
+    document.getElementById('profile-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+    submitBtn.disabled = true;
 
-            const data = {
-                full_name: form.full_name.value,
-                date_of_birth: form.date_of_birth.value,
-                gender: form.gender.value,
-                phone: form.phone.value,
-                address: form.address.value,
-                emergency_contact: form.emergency_contact.value
-            };
-
-            try {
-                const res = await fetch('/patient/profile', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                console.log('response', res);
-                const json = await res.json();
-                if (res.ok && json.success) {
-                    alert('Profile updated successfully!');
-                    location.reload();
-                } else {
-                    alert('Failed to update profile: ' + (json.error || json.message || 'Unknown error'));
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
-                }
-            } catch (err) {
-                console.error('Profile update error:', err);
-                alert('Failed to update profile. Check console for details.');
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
+    // Get the original DOB from the server-side variable
+    const previousDOB = '<%= patient.date_of_birth %>';
+    
+    // Prepare form data
+    const formData = {
+        full_name: form.full_name.value,
+        gender: form.gender.value,
+        phone: form.phone.value,
+        address: form.address.value,
+        emergency_contact: form.emergency_contact.value
+    };
+    
+    // Handle DOB - use input value if valid, otherwise use previous DOB
+    const dobInputValue = form.date_of_birth.value;
+    if (dobInputValue && dobInputValue.trim() !== '') {
+        formData.date_of_birth = dobInputValue;
+        console.log('Using new DOB:', dobInputValue);
+    } else {
+        // Parse the previous DOB string to extract just the date part
+        // The previousDOB might be in format: "Fri Dec 19 2025 00:00:00 GMT+0530 (India Standard Time)"
+        const dateMatch = previousDOB.match(/(\w+\s+\w+\s+\d+\s+\d+)/);
+        if (dateMatch) {
+            const dateStr = dateMatch[1];
+            const dateObj = new Date(dateStr);
+            if (!isNaN(dateObj.getTime())) {
+                // Format as yyyy-MM-dd
+                const year = dateObj.getFullYear();
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                formData.date_of_birth = `${year}-${month}-${day}`;
+                console.log('No DOB provided, using formatted previous value:', formData.date_of_birth);
+            } else {
+                formData.date_of_birth = previousDOB;
+                console.log('No DOB provided, using raw previous value:', previousDOB);
             }
+        } else {
+            formData.date_of_birth = previousDOB;
+            console.log('No DOB provided, using previous value as-is:', previousDOB);
+        }
+    }
+
+    try {
+        const res = await fetch('/patient/profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
         });
+        
+        const json = await res.json();
+        if (res.ok && json.success) {
+            alert('Profile updated successfully!');
+            location.reload();
+        } else {
+            alert('Failed to update profile: ' + (json.error || json.message || 'Unknown error'));
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    } catch (err) {
+        console.error('Profile update error:', err);
+        alert('Failed to update profile. Check console for details.');
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+});
     </script>
 </body>
 </html>

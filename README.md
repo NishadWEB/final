@@ -39,3 +39,19 @@ A comprehensive medical diagnosis platform connecting patients with healthcare p
    ```bash
    git clone <repository-url>
    cd preliminary-diagnosis-webapp
+   ```
+
+## Bug fix: role was undefined during registration
+
+If a user clicks a link like `/auth/register?role=doctor` the registration form previously *disabled* the role radio input to lock the choice. Disabled inputs are not submitted with the form which caused `req.body.role` to be undefined server-side and prevented doctor registrations from being processed.
+
+What I fixed:
+- The backend now passes the `role` query parameter into the template so server-side rendering matches the requested role.
+- The frontend still visually locks the role, but now also appends a hidden `input[name="role"]` to guarantee the role value is included in the POST body.
+- The server validates that a role is present and shows an error when it's missing.
+
+How to test locally:
+1. Start the server (e.g., `npm start` or your local dev command).
+2. Open your browser and visit `/auth/register?role=doctor`.
+3. Ensure the form shows the role locked and the hidden input is present (you can inspect via devtools -> elements).
+4. Submit the form; on success you should be redirected to `/doctor/dashboard` and the database should contain a doctor profile.

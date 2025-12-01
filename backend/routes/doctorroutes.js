@@ -24,4 +24,7 @@ router.post('/chats/:patientId/message', requireDoctor, doctorChatController.pos
 router.post('/update-appointment', requireDoctor, doctorController.updateAppointmentStatus);
 router.post('/update-availability', requireDoctor, doctorController.updateAvailability);
 
+router.post("/appointments/:id/complete", requireDoctor, doctorController.markComplete);
+
+
 module.exports = router;

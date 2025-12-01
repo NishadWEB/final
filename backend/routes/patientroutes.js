@@ -25,4 +25,6 @@ router.post('/profile', requirePatient, patientController.updateProfile);
 router.get('/chat/messages', requirePatient, chatController.getMessages);
 router.post('/chat/message', requirePatient, chatController.postMessage);
 
+router.post('/reschedule-appointment', requirePatient, patientController.rescheduleAppointment);
+
 module.exports = router;

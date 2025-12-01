@@ -59,12 +59,10 @@
                                 </div>
                                 
                                 <div class="appointment-actions">
-                                    <% if (appointment.status === 'scheduled') { %>
-                                        <button class="btn btn-primary" data-id="<%= appointment.id %>" onclick="viewAppointment(this.dataset.id)">View Details</button>
+                                    <% if (appointment.status === 'scheduled' || appointment.status === 'rescheduled' ) { %>
                                         <button class="btn btn-outline" data-id="<%= appointment.id %>" onclick="completeAppointment(this.dataset.id)">Mark Complete</button>
-                                    <% } else if (appointment.status === 'completed') { %>
-                                        <button class="btn btn-outline" data-id="<%= appointment.id %>" onclick="viewAppointment(this.dataset.id)">View Details</button>
                                     <% } %>
+                                   
                                 </div>
                             </div>
                         <% }); %>
@@ -85,12 +83,52 @@
             alert('Appointment details would open for ID: ' + appointmentId);
         }
 
-        function completeAppointment(appointmentId) {
-            if (confirm('Mark this appointment as completed?')) {
-                // In real app, make API call to complete appointment
-                alert('Appointment completion feature would be implemented here.');
+        async function completeAppointment(appointmentId) {
+                const confirmed = confirm("Mark this appointment as completed?");
+                if (!confirmed) return;
+
+                try {
+                    const response = await fetch(`/doctor/appointments/${appointmentId}/complete`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (!data.success) {
+                      alert("Failed to complete appointment.");
+                     return;
+                    }       
+
+                    alert("Appointment marked as completed!");
+
+                    // Update UI without reloading
+                    const card = document.querySelector(`button[data-id='${appointmentId}']`).closest(".appointment-card");
+
+                    // Update the status badge
+                    const statusBadge = card.querySelector(".appointment-status");
+                    statusBadge.innerText = "completed";
+                    statusBadge.classList.remove("status-scheduled");
+                    statusBadge.classList.add("status-completed");
+
+                    // Remove old buttons and keep only "View Details"
+                    const actions = card.querySelector(".appointment-actions");
+                    actions.innerHTML = "";
+                    // <button class="btn btn-outline" data-id="${appointmentId}" onclick="viewAppointment(this.dataset.id)">
+                    //     View Details
+                    // </button>
+                    // `;
+
+                    // Update dataset for filtering
+                    card.dataset.status = "completed";
+
+                } catch (err) {
+                    console.error(err);
+                    alert("Server error occurred.");
+                }           
             }
-        }
 
         // Filter appointments by status
         document.getElementById('status-filter').addEventListener('change', function() {

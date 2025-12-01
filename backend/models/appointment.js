@@ -55,6 +55,30 @@ class Appointment {
     );
     return result.rows[0];
   }
+
+    static async markCompleted(id) {
+        const sql = `
+            UPDATE appointments
+            SET status = 'completed'
+            WHERE id = $1
+            RETURNING *;
+        `;
+
+        const result = await query(sql, [id]);
+        return result.rows[0];  // Return updated appointment
+    }
+
+    static async rescheduleAppot(id, newDate) {
+        const sql = `
+          UPDATE appointments
+          SET appointment_date = $1, status = 'rescheduled'
+          WHERE id = $2
+          RETURNING *;
+          `;
+
+        const result = await query(sql, [newDate, id]);
+        return result.rows[0];
+    }
 }
 
 module.exports = Appointment;

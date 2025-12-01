@@ -159,3 +159,21 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ error: 'Failed to update profile' });
   }
 };
+
+exports.markComplete = async (req, res) => {
+    try {
+        const appointmentId = req.params.id;
+
+        const updated = await Appointment.markCompleted(appointmentId);
+
+        if (!updated) {
+            return res.json({ success: false });
+        }
+
+        return res.json({ success: true });
+
+    } catch (error) {
+        console.error("Appointment completion error:", error);
+        return res.json({ success: false });
+    }
+}

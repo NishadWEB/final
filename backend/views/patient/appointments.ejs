@@ -102,7 +102,7 @@
                                     <% } %>
                                 </div>
                                 
-                                <% if (appointment.status === 'scheduled') { %>
+                                <% if (appointment.status === 'scheduled' || appointment.status === 'rescheduled') { %>
                                     <div class="appointment-actions">
                                         <button class="btn btn-outline cancel-btn" data-appointment-id="<%= appointment.id %>">
                                             <i class="fas fa-times"></i>

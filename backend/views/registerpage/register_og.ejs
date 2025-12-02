@@ -62,14 +62,7 @@
                         </label>
                     </div>
 
-                    <% if (locals.role) { %>
-                        <div class="role-locked-message">
-                            <i class="fas fa-lock"></i>
-                            <span>Role locked as <%= locals.role %>. 
-                                <a href="/" class="change-role-link">Go back to change role</a>
-                            </span>
-                        </div>
-                    <% } %>
+                    
                 </div>
 
                 <!-- BASIC FIELDS -->
@@ -127,11 +120,26 @@
                         <label class="form-label">Specialization</label>
                         <select name="specialization" class="form-control">
                             <option value="">Select Specialization</option>
-                            <option value="cardiology">Cardiology</option>
-                            <option value="neurology">Neurology</option>
-                            <option value="pediatrics">Pediatrics</option>
-                            <option value="surgery">Surgery</option>
-                            <option value="internal_medicine">Internal Medicine</option>
+                            <option value="Cardiology">Cardiology</option>
+                                <option value="Dermatology">Dermatology</option>
+                                <option value="Pediatrics">Pediatrics</option>
+                                <option value="Neurology">Neurology</option>
+                                <option value="Gynecology">Gynecology</option>
+                                <option value="Internal Medicine">Internal Medicine</option>
+                                <option value="Orthopedics">Orthopedics</option>
+                                <option value="ENT">ENT</option>
+                                <option value="Psychiatry">Psychiatry</option>
+                                <option value="Infectious Specialist">Infectious Specialist</option>
+                                <option value="Dentistry">Dentistry</option>
+                                <option value="Hepatology">Hepatology</option>
+                                <option value="Ophthalmology">Ophthalmology</option>
+                                <option value="Endocrinology">Endocrinology</option>
+                                <option value="Oncology">Oncology</option>
+                                <option value="Pulmonology">Pulmonology</option>
+                                <option value="Pathology">Pathology</option>
+                                <option value="General Surgery">General Surgery</option>
+                                <option value="Urology">Urology</option>
+                                <option value="Neurosurgery">Neurosurgery</option>
                         </select>
                     </div>
 
@@ -144,7 +152,7 @@
                         <label class="form-label">Years of Experience</label>
                         <input type="number" name="experience_years" class="form-control" min="0">
                     </div>
-
+                
                     <div class="form-group">
                         <label class="form-label">Hospital Affiliation</label>
                         <input type="text" name="hospital_affiliation" class="form-control">

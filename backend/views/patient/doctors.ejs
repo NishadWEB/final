@@ -88,11 +88,23 @@
                                 <option value="Cardiology">Cardiology</option>
                                 <option value="Dermatology">Dermatology</option>
                                 <option value="Pediatrics">Pediatrics</option>
-                                <option value="Orthopedics">Orthopedics</option>
                                 <option value="Neurology">Neurology</option>
+                                <option value="Gynecology">Gynecology</option>
+                                <option value="Internal Medicine">Internal Medicine</option>
+                                <option value="Orthopedics">Orthopedics</option>
+                                <option value="ENT">ENT</option>
                                 <option value="Psychiatry">Psychiatry</option>
+                                <option value="Infectious Specialist">Infectious Specialist</option>
                                 <option value="Dentistry">Dentistry</option>
+                                <option value="Hepatology">Hepatology</option>
                                 <option value="Ophthalmology">Ophthalmology</option>
+                                <option value="Endocrinology">Endocrinology</option>
+                                <option value="Oncology">Oncology</option>
+                                <option value="Pulmonology">Pulmonology</option>
+                                <option value="Pathology">Pathology</option>
+                                <option value="General Surgery">General Surgery</option>
+                                <option value="Urology">Urology</option>
+                                <option value="Neurosurgery">Neurosurgery</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -209,18 +221,21 @@
 
                 <div class="form-group">
                     <label class="form-label">Describe Your Symptoms</label>
-                    <textarea id="symptoms" name="symptoms" class="form-control" rows="4" placeholder="Please describe your symptoms in detail..." required></textarea>
+                    <textarea id="symptoms" name="symptoms" class="form-control" rows="4" placeholder="Please describe your symptoms from the list below and click 'Add Selected to Description'" readonly required></textarea>
+                     <div id="symptoms-error" class="error-message" style="display: none; color: #ff4757; font-size: 14px; margin-top: 5px;">
+        <i class="fas fa-exclamation-circle"></i> Please add at least one symptom before booking.
+    </div>
                     <div class="symptom-helper">
                         <small>Select common symptoms to add quickly:</small>
                         <div class="symptom-list">
-                            <% const COMMON_SYMPTOMS = ['fever','cough','sore throat','sneezing','runny nose','congestion','headache','nausea','vomiting','diarrhea','fatigue','body aches','painful urination','shortness of breath','chest pain','dizziness']; %>
-                            <% COMMON_SYMPTOMS.forEach(s => { %>
-                                <label>
-                                    <input type="checkbox" class="symptom-checkbox" value="<%= s %>" />
-                                    <span><%= s %></span>
-                                </label>
-                            <% }) %>
-                        </div>
+    <% const COMMON_SYMPTOMS = ['fever','cough','sore throat','sneezing','runny nose','congestion','headache','nausea','vomiting','diarrhea','fatigue','body aches','painful urination','shortness of breath','chest pain','dizziness']; %>
+    <% COMMON_SYMPTOMS.forEach(s => { %>
+        <label class="symptom-label">
+            <input type="checkbox" class="symptom-checkbox" value="<%= s %>" />
+            <span class="symptom-text"><%= s %></span>
+        </label>
+    <% }) %>
+</div>
                         <div style="margin-top: 10px; display: flex; gap: 10px;">
                             <button type="button" id="add-symptoms-btn" class="btn btn-outline">
                                 <i class="fas fa-plus"></i>
@@ -344,23 +359,85 @@
         });
 
         // Symptom helper functionality
-        document.getElementById('add-symptoms-btn').addEventListener('click', function() {
-            const symptomsTextarea = document.getElementById('symptoms');
-            const selectedSymptoms = Array.from(document.querySelectorAll('.symptom-checkbox:checked'))
-                .map(cb => cb.value);
-            
-            if (selectedSymptoms.length > 0) {
-                const currentText = symptomsTextarea.value.trim();
-                const newSymptoms = selectedSymptoms.join(', ');
-                symptomsTextarea.value = currentText ? 
-                    currentText + ', ' + newSymptoms : 
-                    'Symptoms: ' + newSymptoms;
-            }
-        });
 
-        document.getElementById('clear-symptoms-btn').addEventListener('click', function() {
-            document.querySelectorAll('.symptom-checkbox').forEach(cb => cb.checked = false);
-        });
+        document.getElementById('add-symptoms-btn').addEventListener('click', function() {
+    const symptomsTextarea = document.getElementById('symptoms');
+    const selectedSymptoms = Array.from(document.querySelectorAll('.symptom-checkbox:checked'))
+        .map(cb => cb.value);
+    
+    if (selectedSymptoms.length === 0) {
+        alert('Please select at least one symptom before adding to description.');
+        return;
+    }
+    
+    // Get current text and clean it
+    let currentText = symptomsTextarea.value.trim();
+    
+    // If textarea is empty, start with "Symptoms: "
+    if (!currentText) {
+        currentText = "Symptoms: ";
+    }
+    
+    // Extract existing symptoms to avoid duplicates
+    let existingSymptoms = [];
+    if (currentText.toLowerCase().startsWith('symptoms:')) {
+        const afterPrefix = currentText.substring(9).trim();
+        if (afterPrefix) {
+            existingSymptoms = afterPrefix.split(',').map(s => s.trim().toLowerCase());
+        }
+    } else if (currentText) {
+        existingSymptoms = currentText.split(',').map(s => s.trim().toLowerCase());
+    }
+    
+    // Add only new symptoms (avoid duplicates)
+    const newSymptoms = selectedSymptoms.filter(symptom => 
+        !existingSymptoms.includes(symptom.toLowerCase())
+    );
+    
+    if (newSymptoms.length === 0) {
+        alert('All selected symptoms are already in the description.');
+        return;
+    }
+    
+    // Build the updated text
+    let updatedText;
+    if (currentText.toLowerCase().startsWith('symptoms:')) {
+        if (currentText.length > 9) {
+            updatedText = currentText + ', ' + newSymptoms.join(', ');
+        } else {
+            updatedText = 'Symptoms: ' + newSymptoms.join(', ');
+        }
+    } else if (currentText) {
+        updatedText = 'Symptoms: ' + currentText + ', ' + newSymptoms.join(', ');
+    } else {
+        updatedText = 'Symptoms: ' + newSymptoms.join(', ');
+    }
+    
+    symptomsTextarea.value = updatedText;
+    // After updating symptoms textarea, remove any error styling
+symptomsTextarea.classList.remove('error');
+symptomsTextarea.style.border = '';
+symptomsTextarea.style.backgroundColor = '';
+    
+    // Uncheck the checkboxes after adding
+    document.querySelectorAll('.symptom-checkbox:checked').forEach(cb => cb.checked = false);
+});
+        
+// Clear symptoms functionality
+document.getElementById('clear-symptoms-btn').addEventListener('click', function() {
+    // Clear all symptom checkboxes
+    document.querySelectorAll('.symptom-checkbox').forEach(cb => cb.checked = false);
+    
+    // Clear the symptoms textarea completely
+    document.getElementById('symptoms').value = '';
+    
+    // Also clear the diagnosis result if visible
+    const diagnosisResult = document.getElementById('diagnosis-result');
+    if (diagnosisResult.style.display === 'block') {
+        diagnosisResult.style.display = 'none';
+        diagnosisResult.innerHTML = '';
+    }
+});
 
         // Diagnosis functionality
         document.getElementById('diagnose-btn').addEventListener('click', async function() {
@@ -426,46 +503,86 @@
         });
 
         // Form submission
-        document.getElementById('booking-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<div class="loading-spinner"></div> Booking...';
-
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData);
-            
-            try {
-                const response = await fetch('/patient/book-appointment', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert('Appointment booked successfully!');
-                    bookingModal.classList.remove('active');
-                    window.location.href = '/patient/appointments';
-                } else {
-                    alert('Error: ' + result.error);
-                }
-            } catch (error) {
-                console.error('Booking error:', error);
-                alert('Error booking appointment. Please try again.');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
+        // Form submission
+// Form submission
+document.getElementById('booking-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    // Simple but effective validation
+    const symptoms = document.getElementById('symptoms').value.trim();
+    
+    if (!symptoms || symptoms === '' || symptoms === 'Symptoms:' || symptoms.toLowerCase() === 'symptoms:') {
+        // Create and show error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'alert alert-error';
+        errorDiv.innerHTML = `
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Please Add Symptoms</strong>
+            <p>You must add at least one symptom from the checklist before booking an appointment.</p>
+        `;
+        
+        // Insert after symptoms textarea
+        const symptomsTextarea = document.getElementById('symptoms');
+        symptomsTextarea.parentNode.insertBefore(errorDiv, symptomsTextarea.nextSibling);
+        
+        // Highlight textarea
+        symptomsTextarea.style.border = '2px solid #ff4757';
+        symptomsTextarea.style.backgroundColor = 'rgba(255, 71, 87, 0.1)';
+        
+        // Scroll to error
+        symptomsTextarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Remove error after 5 seconds
+        setTimeout(() => {
+            if (errorDiv.parentNode) {
+                errorDiv.parentNode.removeChild(errorDiv);
             }
+            symptomsTextarea.style.border = '';
+            symptomsTextarea.style.backgroundColor = '';
+        }, 5000);
+        
+        return;
+    }
+    
+    // Get form data and submit
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // Show loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<div class="loading-spinner"></div> Booking...';
+
+    // Get form data
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData);
+    
+    try {
+        const response = await fetch('/patient/book-appointment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
         });
 
-        // Close modal with Escape key
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Appointment booked successfully!');
+            bookingModal.classList.remove('active');
+            window.location.href = '/patient/appointments';
+        } else {
+            alert('Error: ' + result.error);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    } catch (error) {
+        console.error('Booking error:', error);
+        alert('Error booking appointment. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    }
+});        // Close modal with Escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && bookingModal.classList.contains('active')) {
                 bookingModal.classList.remove('active');

@@ -6,396 +6,660 @@ print("ENV FILE LOADED")
 import os
 import re
 import json
-import time
+import numpy as np
+import pandas as pd
+import joblib
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from flask_socketio import SocketIO, emit, join_room
 import openai
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
-
 
 if not openai.api_key:
     print("[ml_service] WARNING: OPENAI_API_KEY not set")
 else:
     print("[ml_service] OPENAI_API_KEY loaded")
 
-
-# Lazy import OpenAI (so service still runs without it)
-try:
-    import openai
-    OPENAI_AVAILABLE = True
-except Exception:
-    OPENAI_AVAILABLE = False
-
 app = Flask(__name__)
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
 
 # -------------------------
-# Expanded local fallback rule-based diagnoser
+# PURE ML MODEL for Symptom Checker (No fallback)
 # -------------------------
-class MedicalDiagnosisModelLocal:
+class SymptomMLModel:
     def __init__(self):
-        self.disease_info = {}
-        self.symptom_aliases = {}
-        self._build_kb()
-
-    def _build_kb(self):
-        # Expanded (illustrative) knowledge base. Add more entries over time.
-        self.disease_info = {
-            'common_cold': {
-                'name': 'Common Cold',
-                'symptoms': ['cough', 'sneezing', 'runny nose', 'sore throat', 'congestion'],
-                'treatment': 'Rest, fluids, OTC antihistamines/decongestants',
-                'severity': 'low', 'needs_doctor': False
+        self.vectorizer = TfidfVectorizer(
+            max_features=300, 
+            ngram_range=(1, 3), 
+            stop_words='english',
+            min_df=2,
+            max_df=0.9
+        )
+        self.label_encoder = LabelEncoder()
+        self.model = RandomForestClassifier(
+            n_estimators=500,
+            max_depth=25,
+            min_samples_split=2,
+            min_samples_leaf=1,
+            random_state=42,
+            class_weight='balanced',
+            bootstrap=True,
+            max_features='sqrt'
+        )
+        self.trained = False
+        self.symptom_patterns = {}
+        
+    def _create_comprehensive_training_data(self):
+        """Create comprehensive and diverse training data"""
+        print("[ML Model] Creating training data...")
+        
+        # More detailed disease-symptom mapping with weights
+        disease_patterns = {
+            'Common Cold': {
+                'core': ['runny nose', 'sneezing', 'sore throat', 'congestion'],
+                'common': ['cough', 'mild fever', 'fatigue', 'headache'],
+                'rare': ['body aches', 'chills'],
+                'weight': 8
             },
-            'influenza': {
-                'name': 'Influenza (Flu)',
-                'symptoms': ['fever', 'cough', 'body aches', 'chills', 'fatigue', 'headache'],
-                'treatment': 'Rest, fluids, antipyretics; see doctor if severe',
-                'severity': 'medium', 'needs_doctor': True
+            'Influenza (Flu)': {
+                'core': ['high fever', 'body aches', 'chills', 'severe fatigue'],
+                'common': ['cough', 'headache', 'sore throat', 'runny nose'],
+                'rare': ['nausea', 'vomiting', 'diarrhea'],
+                'weight': 10
             },
-            'migraine': {
-                'name': 'Migraine',
-                'symptoms': ['headache', 'nausea', 'sensitivity to light', 'visual disturbances'],
-                'treatment': 'Rest in dark room, triptans if prescribed',
-                'severity': 'medium', 'needs_doctor': True
+            'Migraine': {
+                'core': ['severe headache', 'sensitivity to light', 'sensitivity to sound'],
+                'common': ['nausea', 'vomiting', 'visual disturbances'],
+                'rare': ['dizziness', 'fatigue', 'neck pain'],
+                'weight': 6
             },
-            'gastroenteritis': {
-                'name': 'Gastroenteritis',
-                'symptoms': ['nausea', 'vomiting', 'diarrhea', 'stomach pain', 'cramps'],
-                'treatment': 'Hydration, bland diet; seek care if severe',
-                'severity': 'medium', 'needs_doctor': False
+            'Gastroenteritis': {
+                'core': ['nausea', 'vomiting', 'diarrhea', 'stomach cramps'],
+                'common': ['fever', 'loss of appetite', 'dehydration'],
+                'rare': ['headache', 'body aches'],
+                'weight': 7
             },
-            'uti': {
-                'name': 'Urinary Tract Infection',
-                'symptoms': ['burning urination', 'frequent urination', 'lower abdominal pain', 'cloudy urine'],
-                'treatment': 'Medical evaluation; likely antibiotics',
-                'severity': 'high', 'needs_doctor': True
+            'Urinary Tract Infection': {
+                'core': ['painful urination', 'frequent urination', 'urinary urgency'],
+                'common': ['lower abdominal pain', 'cloudy urine'],
+                'rare': ['fever', 'nausea', 'blood in urine'],
+                'weight': 5
             },
-            'covid_like': {
-                'name': 'Viral Respiratory Infection (e.g., COVID-19)',
-                'symptoms': ['fever', 'cough', 'loss of taste', 'loss of smell', 'fatigue', 'sore throat', 'shortness of breath'],
-                'treatment': 'Isolate, test if recommended, supportive care',
-                'severity': 'medium', 'needs_doctor': True
+            'COVID-19': {
+                'core': ['loss of taste', 'loss of smell', 'fever', 'dry cough'],
+                'common': ['fatigue', 'shortness of breath', 'sore throat'],
+                'rare': ['headache', 'body aches', 'nausea'],
+                'weight': 9
             },
-            'allergic_rhinitis': {
-                'name': 'Allergic Rhinitis (Allergy)',
-                'symptoms': ['sneezing', 'runny nose', 'itchy eyes', 'congestion'],
-                'treatment': 'Antihistamines, avoid allergens',
-                'severity': 'low', 'needs_doctor': False
+            'Bronchitis': {
+                'core': ['persistent cough', 'mucus production', 'chest discomfort'],
+                'common': ['shortness of breath', 'wheezing', 'fatigue'],
+                'rare': ['fever', 'chills'],
+                'weight': 5
             },
-            'appendicitis': {
-                'name': 'Appendicitis',
-                'symptoms': ['acute abdominal pain', 'right lower quadrant pain', 'fever', 'nausea', 'loss of appetite'],
-                # NOTE: keep treatment generic; avoid alarming text for single-symptom triggers
-                'treatment': 'See a clinician if abdominal pain is severe or persistent',
-                'severity': 'high', 'needs_doctor': True
+            'Allergic Rhinitis': {
+                'core': ['sneezing', 'itchy eyes', 'runny nose', 'itchy throat'],
+                'common': ['congestion', 'watery eyes'],
+                'rare': ['headache', 'fatigue'],
+                'weight': 4
             },
-            'hypertension_urgent': {
-                'name': 'Possible Hypertensive Episode',
-                'symptoms': ['very high blood pressure', 'severe headache', 'blurred vision', 'nosebleed'],
-                'treatment': 'Seek urgent medical attention',
-                'severity': 'high', 'needs_doctor': True
+            'Pneumonia': {
+                'core': ['cough with phlegm', 'fever', 'shortness of breath'],
+                'common': ['chest pain', 'fatigue', 'chills'],
+                'rare': ['nausea', 'confusion'],
+                'weight': 6
             },
-            'dermatitis': {
-                'name': 'Dermatitis / Skin Rash',
-                'symptoms': ['rash', 'itching', 'redness', 'swelling'],
-                'treatment': 'Topical emollients/antihistamines or see dermatologist',
-                'severity': 'low', 'needs_doctor': False
+            'Sinusitis': {
+                'core': ['facial pain', 'nasal congestion', 'thick nasal discharge'],
+                'common': ['headache', 'cough', 'fatigue'],
+                'rare': ['tooth pain', 'bad breath'],
+                'weight': 4
             }
         }
-
-        aliases = {
-            'fever': ['fever', 'temperature', 'high temperature', 'febrile'],
-            'cough': ['cough', 'coughing'],
-            'headache': ['headache', 'head pain', 'migraine'],
-            'nausea': ['nausea', 'queasy', 'sick to stomach'],
-            'vomit': ['vomit', 'vomiting', 'throwing up'],
-            'diarrhea': ['diarrhea', 'loose stool', 'runny stool'],
-            'sore_throat': ['sore throat', 'throat pain'],
-            'shortness_of_breath': ['shortness of breath', 'breathless', 'dyspnea'],
-            'loss_of_taste': ['loss of taste', 'no taste', 'ageusia'],
-            'loss_of_smell': ['loss of smell', 'no smell', 'anosmia'],
-            'burning_urination': ['painful urination', 'burning urination', 'dysuria'],
-            'abdominal_pain': ['stomach pain', 'abdominal pain', 'belly pain']
+        
+        training_samples = []
+        
+        # Build symptom patterns for feature enhancement
+        for disease, pattern in disease_patterns.items():
+            all_symptoms = pattern['core'] + pattern['common'] + pattern['rare']
+            self.symptom_patterns[disease] = all_symptoms
+        
+        # Generate training samples
+        for disease, pattern in disease_patterns.items():
+            weight = pattern['weight']
+            
+            # Generate different symptom combinations
+            symptom_sets = []
+            
+            # Core symptoms only (2-3 symptoms)
+            for i in range(2, min(4, len(pattern['core']) + 1)):
+                import itertools
+                for combo in itertools.combinations(pattern['core'], i):
+                    symptom_sets.append(list(combo))
+            
+            # Core + common (3-4 symptoms)
+            for i in range(1, min(3, len(pattern['common']) + 1)):
+                for core_combo in itertools.combinations(pattern['core'], 2):
+                    for common_combo in itertools.combinations(pattern['common'], i):
+                        symptom_sets.append(list(core_combo) + list(common_combo))
+            
+            # Create samples with variations
+            for symptoms in symptom_sets:
+                # Basic symptom string
+                symptom_text = ' '.join(symptoms)
+                
+                # Add variations
+                variations = [
+                    symptom_text,
+                    symptom_text + ' for few days',
+                    'having ' + symptom_text,
+                    'experiencing ' + symptom_text,
+                    symptom_text.replace(' ', ' and ')
+                ]
+                
+                for var in variations:
+                    training_samples.append({
+                        'symptoms': var,
+                        'disease': disease
+                    })
+                    
+                    # Add with synonyms
+                    training_samples.append({
+                        'symptoms': self._add_synonyms(var),
+                        'disease': disease
+                    })
+        
+        df = pd.DataFrame(training_samples)
+        print(f"[ML Model] Generated {len(df)} training samples")
+        
+        # Add some noise and variations
+        df = self._add_noise_and_variations(df)
+        
+        return df
+    
+    def _add_synonyms(self, text):
+        """Add symptom synonyms for better generalization"""
+        synonym_map = {
+            'fever': ['temperature', 'high temp', 'feverish'],
+            'cough': ['coughing', 'dry cough', 'wet cough'],
+            'headache': ['head pain', 'migraine pain'],
+            'nausea': ['queasy', 'sick to stomach'],
+            'vomiting': ['throwing up', 'emesis'],
+            'diarrhea': ['loose stool', 'watery stool'],
+            'sore throat': ['throat pain', 'scratchy throat'],
+            'shortness of breath': ['breathlessness', 'difficulty breathing'],
+            'runny nose': ['runny', 'nose running'],
+            'sneezing': ['sneeze'],
+            'fatigue': ['tired', 'exhausted'],
+            'body aches': ['muscle pain', 'aching body'],
+            'chills': ['shivering', 'cold shivers'],
+            'congestion': ['stuffy nose', 'blocked nose'],
+            'painful urination': ['burning urination', 'pain when urinating']
         }
-
-        for canon, vals in aliases.items():
-            for v in vals:
-                self.symptom_aliases[v] = canon
-
-        for d in self.disease_info.values():
-            for s in d['symptoms']:
-                if s not in self.symptom_aliases:
-                    self.symptom_aliases[s] = s
-
-    def _norm(self, s: str) -> str:
-        return re.sub(r'[^a-z0-9\s]', ' ', (s or '').lower()).strip()
-
-    def extract(self, payload):
-        if isinstance(payload, (list, tuple)):
-            items = [str(x) for x in payload if x]
+        
+        for word, synonyms in synonym_map.items():
+            if word in text:
+                for synonym in synonyms[:2]:
+                    if synonym not in text:
+                        text += ' ' + synonym
+        
+        return text
+    
+    def _add_noise_and_variations(self, df):
+        """Add noise and variations to make model robust"""
+        print("[ML Model] Adding variations to training data...")
+        
+        # Add symptom variations
+        extended_samples = []
+        
+        for _, row in df.iterrows():
+            symptoms = row['symptoms']
+            disease = row['disease']
+            
+            # Keep original
+            extended_samples.append({'symptoms': symptoms, 'disease': disease})
+            
+            # Add with extra words
+            extra_words = ['also', 'plus', 'along with', 'and']
+            for word in extra_words:
+                extended_samples.append({
+                    'symptoms': f"{symptoms} {word} discomfort",
+                    'disease': disease
+                })
+            
+            # Add with severity
+            severities = ['mild', 'moderate', 'severe']
+            for severity in severities:
+                words = symptoms.split()
+                if len(words) > 0:
+                    modified = f"{severity} {words[0]} " + ' '.join(words[1:])
+                    extended_samples.append({
+                        'symptoms': modified,
+                        'disease': disease
+                    })
+        
+        return pd.DataFrame(extended_samples)
+    
+    def _clean_text(self, text):
+        """Advanced text cleaning"""
+        text = text.lower()
+        
+        # Remove punctuation but keep important info
+        text = re.sub(r'[^\w\s]', ' ', text)
+        
+        # Remove extra spaces
+        text = re.sub(r'\s+', ' ', text).strip()
+        
+        # Remove common filler words but keep medical terms
+        filler_words = set([
+            'i', 'me', 'my', 'have', 'has', 'had', 'am', 'is', 'are', 'was', 'were',
+            'feeling', 'feel', 'experiencing', 'having', 'got', 'getting'
+        ])
+        
+        words = text.split()
+        filtered_words = []
+        
+        for word in words:
+            # Keep medical sounding words or words longer than 3 chars
+            if (len(word) > 3 or 
+                word in ['fever', 'cough', 'pain', 'uti', 'flu'] or
+                any(med in word for med in ['ache', 'itis', 'osis', 'algia'])):
+                filtered_words.append(word)
+            elif word not in filler_words:
+                filtered_words.append(word)
+        
+        return ' '.join(filtered_words)
+    
+    def _extract_features(self, text):
+        """Extract enhanced features including symptom patterns"""
+        words = text.split()
+        features = set(words)
+        
+        # Add n-grams
+        for i in range(len(words)):
+            # Bigrams
+            if i < len(words) - 1:
+                features.add(f"{words[i]}_{words[i+1]}")
+            # Trigrams
+            if i < len(words) - 2:
+                features.add(f"{words[i]}_{words[i+1]}_{words[i+2]}")
+        
+        # Add disease-specific patterns
+        for disease, symptoms in self.symptom_patterns.items():
+            pattern_keywords = []
+            for symptom in symptoms:
+                symptom_words = symptom.split()
+                pattern_keywords.extend(symptom_words)
+            
+            # Check if text contains disease-specific keywords
+            if any(keyword in text for keyword in set(pattern_keywords)):
+                features.add(f"pattern_{disease[:10].lower().replace(' ', '_')}")
+        
+        # Add symptom combinations
+        symptom_combos = {
+            'respiratory': ['cough', 'shortness', 'breath', 'wheezing'],
+            'fever_related': ['fever', 'chills', 'sweating'],
+            'gastro': ['nausea', 'vomiting', 'diarrhea', 'stomach'],
+            'pain_related': ['pain', 'ache', 'sore', 'tender']
+        }
+        
+        for combo_name, keywords in symptom_combos.items():
+            if any(keyword in text for keyword in keywords):
+                features.add(f"combo_{combo_name}")
+        
+        return ' '.join(features)
+    
+    def train(self):
+        """Train the ML model"""
+        print("[ML Model] Training machine learning model...")
+        
+        # Create training data
+        df = self._create_comprehensive_training_data()
+        
+        # Preprocess text
+        df['symptoms_processed'] = df['symptoms'].apply(self._clean_text)
+        df['symptoms_enhanced'] = df['symptoms_processed'].apply(self._extract_features)
+        
+        print(f"[ML Model] Sample processed: {df['symptoms_processed'].iloc[0]}")
+        print(f"[ML Model] Sample enhanced: {df['symptoms_enhanced'].iloc[0]}")
+        
+        # Prepare features and labels
+        X = self.vectorizer.fit_transform(df['symptoms_enhanced'])
+        y = self.label_encoder.fit_transform(df['disease'])
+        
+        print(f"[ML Model] Feature matrix shape: {X.shape}")
+        print(f"[ML Model] Number of diseases: {len(self.label_encoder.classes_)}")
+        print(f"[ML Model] Diseases: {list(self.label_encoder.classes_)}")
+        
+        # Split data for validation
+        X_train, X_val, y_train, y_val = train_test_split(
+            X, y, test_size=0.2, random_state=42, stratify=y
+        )
+        
+        # Train model
+        self.model.fit(X_train, y_train)
+        
+        # Calculate accuracy
+        from sklearn.metrics import accuracy_score, classification_report
+        y_pred = self.model.predict(X_val)
+        accuracy = accuracy_score(y_val, y_pred)
+        
+        print(f"[ML Model] Validation Accuracy: {accuracy:.4f}")
+        print("\n[ML Model] Classification Report:")
+        print(classification_report(y_val, y_pred, 
+                                   target_names=self.label_encoder.classes_))
+        
+        # Calculate feature importance
+        feature_names = self.vectorizer.get_feature_names_out()
+        importances = self.model.feature_importances_
+        top_features = sorted(zip(feature_names, importances), 
+                             key=lambda x: x[1], reverse=True)[:20]
+        
+        print("\n[ML Model] Top 20 Important Features:")
+        for feature, importance in top_features:
+            print(f"  {feature}: {importance:.4f}")
+        
+        # Save model
+        self._save_model()
+        self.trained = True
+        
+        return accuracy
+    
+    def _save_model(self):
+        """Save trained model"""
+        joblib.dump(self.vectorizer, 'symptom_vectorizer.joblib')
+        joblib.dump(self.label_encoder, 'disease_encoder.joblib')
+        joblib.dump(self.model, 'diagnosis_ml_model.joblib')
+        
+        # Save symptom patterns
+        with open('symptom_patterns.json', 'w') as f:
+            json.dump(self.symptom_patterns, f)
+        
+        print("[ML Model] Model saved to disk")
+    
+    def load_model(self):
+        """Load trained model"""
+        try:
+            self.vectorizer = joblib.load('symptom_vectorizer.joblib')
+            self.label_encoder = joblib.load('disease_encoder.joblib')
+            self.model = joblib.load('diagnosis_ml_model.joblib')
+            
+            # Load symptom patterns
+            with open('symptom_patterns.json', 'r') as f:
+                self.symptom_patterns = json.load(f)
+            
+            self.trained = True
+            print("[ML Model] Pre-trained model loaded successfully")
+            
+            # Print model info
+            print(f"[ML Model] Number of features: {len(self.vectorizer.get_feature_names_out())}")
+            print(f"[ML Model] Number of diseases: {len(self.label_encoder.classes_)}")
+            print(f"[ML Model] Diseases available: {list(self.label_encoder.classes_)}")
+            
+            return True
+        except Exception as e:
+            print(f"[ML Model] Could not load saved model: {e}")
+            return False
+    
+    def predict(self, symptoms_text):
+        """Predict disease from symptoms using only ML model"""
+        if not self.trained:
+            raise Exception("ML Model not trained. Please train or load the model first.")
+        
+        # Clean and enhance text
+        cleaned_text = self._clean_text(symptoms_text)
+        enhanced_text = self._extract_features(cleaned_text)
+        
+        print(f"[ML Prediction] Input: {symptoms_text}")
+        print(f"[ML Prediction] Cleaned: {cleaned_text}")
+        print(f"[ML Prediction] Enhanced: {enhanced_text}")
+        
+        # Vectorize
+        X = self.vectorizer.transform([enhanced_text])
+        
+        # Check if features are present
+        if X.sum() == 0:
+            print("[ML Prediction] No features extracted from input")
+            return None, 0.0, [], 'unknown'
+        
+        # Get prediction probabilities
+        probabilities = self.model.predict_proba(X)[0]
+        
+        # Get top 3 predictions
+        top_3_indices = np.argsort(probabilities)[-3:][::-1]
+        top_3_diseases = self.label_encoder.inverse_transform(top_3_indices)
+        top_3_probs = probabilities[top_3_indices]
+        
+        # Get top prediction
+        top_disease = top_3_diseases[0]
+        top_confidence = top_3_probs[0]
+        
+        # Extract identified symptoms
+        identified_symptoms = self._identify_symptoms(cleaned_text)
+        
+        # Determine urgency
+        urgency = self._get_urgency(top_disease, top_confidence, len(identified_symptoms))
+        
+        print(f"[ML Prediction] Top disease: {top_disease} ({top_confidence:.2%})")
+        print(f"[ML Prediction] Identified symptoms: {identified_symptoms}")
+        print(f"[ML Prediction] Urgency: {urgency}")
+        
+        # Return top prediction if confidence is reasonable
+        if top_confidence > 0.15:  # Lower threshold for ML-only model
+            return top_disease, top_confidence, identified_symptoms, urgency
         else:
-            text = str(payload or '')
-            items = re.split(r'[;,\n\.]+', text)
-        found = set()
-        cleaned = self._norm(" ".join(items))
-        for alias in sorted(self.symptom_aliases.keys(), key=lambda x: -len(x)):
-            if alias in cleaned:
-                found.add(self.symptom_aliases[alias])
-        return sorted(list(found))
-
-    def diagnose(self, payload):
-        syms = self.extract(payload)
-        if not syms:
-            return {
-                'diagnosis': 'No clear symptoms',
-                'confidence': 0.0,
-                'identified_symptoms': [],
-                'recommendation': 'Please provide more detail.'
-            }
-
-        scores = {}
-        for key, info in self.disease_info.items():
-            kw = [s for s in info['symptoms']]
-
-            # Require more matches for high-severity diseases
-            matched = len(set(kw).intersection(set(syms)))
-
-            # High-severity diseases need at least 2 matches
-            if info.get('severity') == 'high' and matched < 2:
-                continue
-
-            # medium/low need at least 1 match
-            if matched >= 1:
-                scores[key] = matched / len(kw)
-
-        if not scores:
-            return {
-                'diagnosis': 'Not found in DB',
-                'confidence': 0.0,
-                'identified_symptoms': syms,
-                'recommendation': 'Consider consulting a doctor.'
-            }
-
-        # pick highest score (tie-break deterministic by key)
-        key, score = max(scores.items(), key=lambda x: (x[1], x[0]))
-        info = self.disease_info[key]
-
-        confidence = round(min(0.99, score * 0.85 + min(0.15, 0.05 * len(syms))), 2)
-
-        return {
-            'diagnosis': f'Possible {info["name"]}',
-            'recommendation': info['treatment'],
-            'confidence': confidence,
-            'identified_symptoms': syms,
-            'needs_doctor': info['needs_doctor']
+            return None, top_confidence, identified_symptoms, 'unknown'
+    
+    def _identify_symptoms(self, text):
+        """Identify symptoms from text"""
+        words = set(text.split())
+        features = set(self.vectorizer.get_feature_names_out())
+        
+        # Find matching symptoms
+        identified = list(words.intersection(features))
+        
+        # Also check for multi-word symptoms in patterns
+        for disease, symptoms in self.symptom_patterns.items():
+            for symptom in symptoms:
+                if symptom in text:
+                    identified.append(symptom)
+        
+        return list(set(identified))
+    
+    def _get_urgency(self, disease, confidence, symptom_count):
+        """Determine urgency based on disease and confidence"""
+        urgent_diseases = ['Pneumonia', 'COVID-19', 'Urinary Tract Infection']
+        emergency_diseases = []  # Add if needed
+        
+        if disease in emergency_diseases:
+            return 'emergency'
+        elif disease in urgent_diseases and confidence > 0.4:
+            return 'high'
+        elif symptom_count >= 3 and confidence > 0.6:
+            return 'medium'
+        else:
+            return 'low'
+    
+    def get_recommendation(self, disease, confidence, symptom_count):
+        """Get recommendation based on ML prediction"""
+        recommendations = {
+            'Common Cold': 'Rest, stay hydrated, use over-the-counter cold remedies. See doctor if symptoms persist >10 days.',
+            'Influenza (Flu)': 'Rest, drink fluids, use fever reducers. Seek medical care if breathing difficulty or high fever persists.',
+            'Migraine': 'Rest in dark quiet room, stay hydrated. Consult doctor for preventive treatment options.',
+            'Gastroenteritis': 'Stay hydrated with electrolyte solutions. Eat bland foods (BRAT diet). See doctor if severe dehydration.',
+            'Urinary Tract Infection': 'Drink plenty of water. Requires medical evaluation and likely antibiotics.',
+            'COVID-19': 'Isolate, rest, monitor symptoms. Seek emergency care if difficulty breathing.',
+            'Bronchitis': 'Rest, use humidifier, stay hydrated. See doctor if symptoms persist >3 weeks.',
+            'Allergic Rhinitis': 'Avoid allergens, use antihistamines or nasal sprays.',
+            'Pneumonia': 'Requires medical attention. May need antibiotics. Rest and stay hydrated.',
+            'Sinusitis': 'Use saline nasal spray, stay hydrated. See doctor if symptoms persist >10 days.'
         }
+        
+        base = recommendations.get(disease, 'Consult a healthcare professional for proper diagnosis and treatment.')
+        
+        # Add confidence qualifier
+        if confidence < 0.3:
+            base = f"Low confidence prediction. {base}"
+        elif confidence > 0.7:
+            base = f"High confidence prediction. {base}"
+        
+        return base
+    
+    def needs_doctor(self, urgency):
+        """Determine if doctor visit is needed"""
+        return urgency in ['high', 'emergency']
 
-local_model = MedicalDiagnosisModelLocal()
+# Initialize ML Model (NO FALLBACK)
+ml_model = SymptomMLModel()
+
+# Try to load existing model, else train new one
+if not ml_model.load_model():
+    print("[ML Model] Training new model...")
+    accuracy = ml_model.train()
+    print(f"[ML Model] Training completed with accuracy: {accuracy:.2%}")
 
 # -------------------------
-# AI wrapper (OpenAI Chat Completion)
+# OpenAI Chat Functions (separate from diagnosis)
 # -------------------------
-def init_openai():
-    # debug prints to help you see env in the terminal (remove in production)
-    print("[debug] OPENAI_AVAILABLE =", OPENAI_AVAILABLE)
-    print("[debug] OPENAI_API_KEY present:", bool(os.environ.get("OPENAI_API_KEY")))
-
-    if not OPENAI_AVAILABLE:
-        return False, "openai package not installed"
-    key = os.environ.get("OPENAI_API_KEY") or os.environ.get("OPENAI_KEY")
-    if not key:
-        return False, "OPENAI_API_KEY not set"
-    openai.api_key = key
-    return True, "ok"
-
-def build_prompt(symptoms_text: str) -> str:
-    p = f"""
-You are a clinical-grade assistant that MUST return valid JSON only. Analyze the following patient free-text symptoms and output a JSON object with keys:
-- diagnosis: short diagnosis string (e.g. "Possible Influenza")
-- identified_symptoms: array of short tokens (e.g. ["fever","cough"])
-- confidence: decimal 0.0-1.0
-- recommendation: short next-steps for patient
-- needs_doctor: boolean
-
-Patient symptoms:
-\"\"\"{symptoms_text}\"\"\""
-
-Return JSON only with no explanation or extra text.
-"""
-    return p
-
-def analyze_with_openai(symptoms_text: str, model_name: str = None) -> dict:
-    ok, msg = init_openai()
-    if not ok:
-        raise RuntimeError(msg)
-    model_name = model_name or os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
-    prompt = build_prompt(symptoms_text)
-    resp = openai.ChatCompletion.create(
-    model="gpt-4o-mini",
-    messages=[{"role": "user", "content": prompt}],
-    max_tokens=10000,
-    temperature=0.4
-)
-    content = resp.choices[0].message.get("content", "").strip()
-
+def chat_with_openai(message):
+    """Use OpenAI for chat support only"""
     try:
-        parsed = json.loads(content)
-    except Exception:
-        import re
-        m = re.search(r'(\{[\s\S]*\})', content)
-        if m:
-            parsed = json.loads(m.group(1))
-        else:
-            raise RuntimeError("AI output not parseable as JSON: " + (content[:1000]))
-
-    parsed['confidence'] = float(parsed.get('confidence', 0.0))
-    parsed['identified_symptoms'] = parsed.get('identified_symptoms', []) or []
-    parsed['recommendation'] = parsed.get('recommendation', '')
-    parsed['needs_doctor'] = bool(parsed.get('needs_doctor', False))
-    return parsed
+        response = openai.ChatCompletion.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a helpful medical assistant for a hospital support team. Provide general health information and support. DO NOT diagnose symptoms - refer to symptom checker."},
+                {"role": "user", "content": message}
+            ],
+            temperature=0.7,
+            max_tokens=500
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"[OpenAI Chat Error]: {e}")
+        return "I'm here to help! For medical diagnosis, please use our symptom checker feature."
 
 # -------------------------
-# Routes
+# Routes (ML Model Only - No Fallback)
 # -------------------------
 @app.route('/health', methods=['GET'])
 def health():
-    return jsonify({'status': 'healthy'})
+    return jsonify({
+        'status': 'healthy', 
+        'model': 'ml_only',
+        'trained': ml_model.trained,
+        'diseases': list(ml_model.label_encoder.classes_) if ml_model.trained else []
+    })
 
 @app.route('/analyze', methods=['POST'])
 def analyze_route():
+    """Symptom checker - ML MODEL ONLY (no fallback)"""
     payload = request.get_json() or {}
     symptoms = payload.get('symptoms') or payload.get('text') or ""
     symptoms = str(symptoms).strip()
+    
     if not symptoms:
         return jsonify({'error': 'No symptoms provided'}), 400
-
+    
+    if not ml_model.trained:
+        return jsonify({'error': 'ML model not trained'}), 503
+    
+    # Use ML model ONLY
     try:
-        ai_enabled, reason = init_openai()
-        if ai_enabled:
-            try:
-                ai_result = analyze_with_openai(symptoms)
-                return jsonify({
-                    "source": "ai",
-                    "diagnosis": ai_result.get('diagnosis', 'Unknown'),
-                    "identified_symptoms": ai_result.get('identified_symptoms', []),
-                    "confidence": ai_result.get('confidence', 0.0),
-                    "recommendation": ai_result.get('recommendation', ''),
-                    "needs_doctor": bool(ai_result.get('needs_doctor', False))
-                })
-            except Exception as e:
-                print("[ml_service] AI analyze error:", e)
-        else:
-            print("[ml_service] AI skipped:", reason)
+        disease, confidence, identified_symptoms, urgency = ml_model.predict(symptoms)
+        
+        if disease is None:
+            return jsonify({
+                "source": "ml_model",
+                "diagnosis": "No clear diagnosis identified",
+                "identified_symptoms": identified_symptoms,
+                "confidence": float(confidence),
+                "recommendation": "Please provide more specific symptoms or consult a healthcare professional.",
+                "needs_doctor": True,
+                "urgency": "unknown"
+            })
+        
+        # Get recommendation
+        recommendation = ml_model.get_recommendation(disease, confidence, len(identified_symptoms))
+        needs_doctor = ml_model.needs_doctor(urgency)
+        
+        return jsonify({
+            "source": "ml_model",
+            "diagnosis": f"Possible {disease}",
+            "identified_symptoms": identified_symptoms,
+            "confidence": float(confidence),
+            "recommendation": recommendation,
+            "needs_doctor": needs_doctor,
+            "urgency": urgency
+        })
+        
     except Exception as e:
-        print("[ml_service] AI init error:", e)
-
-    local = local_model.diagnose(symptoms)
-    return jsonify({
-        "source": "local",
-        "diagnosis": local.get('diagnosis'),
-        "identified_symptoms": local.get('identified_symptoms', []),
-        "confidence": local.get('confidence', 0.0),
-        "recommendation": local.get('recommendation', ''),
-        "needs_doctor": local.get('needs_doctor', False)
-    })
+        print(f"[ML Model Error]: {e}")
+        return jsonify({
+            "error": "ML diagnosis service error",
+            "message": "Please try again with different symptoms or consult a doctor directly."
+        }), 500
 
 @app.route('/chat', methods=['POST'])
 def chat_route():
+    """Chat support - uses OpenAI only (separate from diagnosis)"""
     payload = request.get_json() or {}
     user_message = payload.get("message", "").strip()
+    
     if not user_message:
         return jsonify({"reply": "Please enter a message."})
-
+    
+    # Use OpenAI for chat support
     try:
-        messages = [
-            {"role": "system", "content": "You are a friendly medical assistant. Always respond helpfully and safely."},
-            {"role": "user", "content": user_message}
-        ]
-
-        resp = openai.ChatCompletion.create(
-            model="gpt-4o-mini",
-            messages=messages,
-            temperature=0.6,
-            max_tokens=300
-        )
-
-        reply = resp.choices[0].message['content'].strip()
+        reply = chat_with_openai(user_message)
         return jsonify({"reply": reply})
-
     except Exception as e:
-        print("[chat] AI error:", e)
-        return jsonify({"reply": "I'm here to help! Could you describe your symptoms or question?"})
+        print(f"[Chat Error]: {e}")
+        return jsonify({"reply": "I'm here to help! For medical diagnosis, please use our symptom checker feature."})
 
-# backwards-compat / older endpoints
-@app.route('/diagnose', methods=['POST'])
-def diagnose_route():
-    return analyze_route()
+@app.route('/model_info', methods=['GET'])
+def model_info():
+    """Get information about the ML model"""
+    if not ml_model.trained:
+        return jsonify({'error': 'Model not trained'}), 404
+    
+    return jsonify({
+        'model_type': 'RandomForestClassifier',
+        'n_estimators': ml_model.model.n_estimators,
+        'diseases': list(ml_model.label_encoder.classes_),
+        'n_features': len(ml_model.vectorizer.get_feature_names_out()),
+        'trained': ml_model.trained
+    })
 
-# -------------------------
-# socket handlers
-# -------------------------
-@socketio.on('connect')
-def _on_connect():
-    emit('connected', {'ok': True})
-
-@socketio.on('join')
-def _on_join(data):
-    room = data.get('room')
-    if room:
-        join_room(room)
-        emit('joined', {'room': room}, to=room)
-
-@socketio.on('diagnose')
-def _socket_diagnose(data):
-    room = data.get('room')
-    symptoms = data.get('symptoms')
+@app.route('/retrain', methods=['POST'])
+def retrain_route():
+    """Retrain the ML model"""
     try:
-        ai_enabled, _ = init_openai()
-        if ai_enabled:
-            parsed = analyze_with_openai(symptoms)
-            result = {
-                "diagnosis": parsed.get('diagnosis'),
-                "identified_symptoms": parsed.get('identified_symptoms', []),
-                "confidence": parsed.get('confidence', 0.0),
-                "recommendation": parsed.get('recommendation',''),
-                "needs_doctor": bool(parsed.get('needs_doctor', False))
-            }
-        else:
-            local = local_model.diagnose(symptoms)
-            result = {
-                "diagnosis": local.get('diagnosis'),
-                "identified_symptoms": local.get('identified_symptoms', []),
-                "confidence": local.get('confidence', 0.0),
-                "recommendation": local.get('recommendation',''),
-                "needs_doctor": local.get('needs_doctor', False)
-            }
+        print("[ML Model] Retraining model...")
+        accuracy = ml_model.train()
+        return jsonify({
+            "success": True,
+            "message": "ML model retrained successfully",
+            "accuracy": accuracy
+        })
     except Exception as e:
-        print("[ml_service] socket analyze error:", e)
-        local = local_model.diagnose(symptoms)
-        result = {
-            "diagnosis": local.get('diagnosis'),
-            "identified_symptoms": local.get('identified_symptoms', []),
-            "confidence": local.get('confidence', 0.0),
-            "recommendation": local.get('recommendation',''),
-            "needs_doctor": local.get('needs_doctor', False)
-        }
-
-    if room:
-        emit('diagnosis_result', result, to=room)
-    else:
-        emit('diagnosis_result', result)
+        return jsonify({"error": str(e)}), 500
 
 # -------------------------
-# run
+# Run the application
 # -------------------------
 if __name__ == '__main__':
     port = int(os.environ.get('ML_PORT', 5000))
     print(f"[ml_service] Starting on 0.0.0.0:{port}")
-    try:
-        socketio.run(app, host='0.0.0.0', port=port)
-    except Exception as e:
-        print(f"[ml_service] start error: {e}")
+    print(f"[ml_service] Model Type: ML-Only (No Fallback)")
+    print(f"[ml_service] ML Model Status: {'TRAINED' if ml_model.trained else 'NOT TRAINED'}")
+    
+    if ml_model.trained:
+        print(f"[ml_service] Diseases recognized: {len(ml_model.label_encoder.classes_)}")
+        for disease in ml_model.label_encoder.classes_:
+            print(f"  - {disease}")
+    
+    app.run(host='0.0.0.0', port=port, debug=True)

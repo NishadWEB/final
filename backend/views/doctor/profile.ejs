@@ -46,7 +46,31 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">Specialization</label>
-                                    <input type="text" name="specialization" class="form-control" value="<%= (doctor && doctor.specialization) || '' %>" required>
+                                    <select name="specialization" class="form-control" required>
+        <option value="">Select Specialization</option>
+
+        <option value="Cardiology" <%= doctor && doctor.specialization === 'Cardiology' ? 'selected' : '' %>>Cardiology</option>
+        <option value="Dermatology" <%= doctor && doctor.specialization === 'Dermatology' ? 'selected' : '' %>>Dermatology</option>
+        <option value="Pediatrics" <%= doctor && doctor.specialization === 'Pediatrics' ? 'selected' : '' %>>Pediatrics</option>
+        <option value="Neurology" <%= doctor && doctor.specialization === 'Neurology' ? 'selected' : '' %>>Neurology</option>
+        <option value="Gynecology" <%= doctor && doctor.specialization === 'Gynecology' ? 'selected' : '' %>>Gynecology</option>
+        <option value="Internal Medicine" <%= doctor && doctor.specialization === 'Internal Medicine' ? 'selected' : '' %>>Internal Medicine</option>
+        <option value="Orthopedics" <%= doctor && doctor.specialization === 'Orthopedics' ? 'selected' : '' %>>Orthopedics</option>
+        <option value="ENT" <%= doctor && doctor.specialization === 'ENT' ? 'selected' : '' %>>ENT</option>
+        <option value="Psychiatry" <%= doctor && doctor.specialization === 'Psychiatry' ? 'selected' : '' %>>Psychiatry</option>
+        <option value="Infectious Specialist" <%= doctor && doctor.specialization === 'Infectious Specialist' ? 'selected' : '' %>>Infectious Specialist</option>
+        <option value="Dentistry" <%= doctor && doctor.specialization === 'Dentistry' ? 'selected' : '' %>>Dentistry</option>
+        <option value="Hepatology" <%= doctor && doctor.specialization === 'Hepatology' ? 'selected' : '' %>>Hepatology</option>
+        <option value="Ophthalmology" <%= doctor && doctor.specialization === 'Ophthalmology' ? 'selected' : '' %>>Ophthalmology</option>
+        <option value="Endocrinology" <%= doctor && doctor.specialization === 'Endocrinology' ? 'selected' : '' %>>Endocrinology</option>
+        <option value="Oncology" <%= doctor && doctor.specialization === 'Oncology' ? 'selected' : '' %>>Oncology</option>
+        <option value="Pulmonology" <%= doctor && doctor.specialization === 'Pulmonology' ? 'selected' : '' %>>Pulmonology</option>
+        <option value="Pathology" <%= doctor && doctor.specialization === 'Pathology' ? 'selected' : '' %>>Pathology</option>
+        <option value="General Surgery" <%= doctor && doctor.specialization === 'General Surgery' ? 'selected' : '' %>>General Surgery</option>
+        <option value="Urology" <%= doctor && doctor.specialization === 'Urology' ? 'selected' : '' %>>Urology</option>
+        <option value="Neurosurgery" <%= doctor && doctor.specialization === 'Neurosurgery' ? 'selected' : '' %>>Neurosurgery</option>
+
+    </select>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">License Number</label>

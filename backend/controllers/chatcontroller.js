@@ -2,6 +2,7 @@ const axios = require('axios');
 const OPENAI_KEY = process.env.OPENAI_API_KEY || null;
 
 async function callOpenAI(promptText) {
+  console.log('inside open aiiiiii ......');
   if (!OPENAI_KEY) throw new Error('OpenAI API key not configured');
 
   const payload = {

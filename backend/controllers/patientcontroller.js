@@ -52,7 +52,8 @@ exports.getDoctors = async (req, res) => {
 
 exports.bookAppointment = async (req, res) => {
   try {
-    const { doctor_id, appointment_date, symptoms } = req.body;
+    const { doctor_id, appointment_date } = req.body;
+    // console.log(symptoms);
     
     if (!req.session.user || req.session.user.role !== 'patient') {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -61,23 +62,23 @@ exports.bookAppointment = async (req, res) => {
     const patient = await Patient.findByUserId(req.session.user.id);
     
     // Get preliminary diagnosis from ML service
-    let preliminary_diagnosis = '';
-    try {
-      const mlResponse = await axios.post(`${process.env.ML_SERVICE_URL}/diagnose`, {
-        symptoms: symptoms
-      });
-      preliminary_diagnosis = mlResponse.data.diagnosis;
-    } catch (mlError) {
-      console.error('ML service error:', mlError);
-      preliminary_diagnosis = 'Preliminary analysis unavailable. Please consult with doctor.';
-    }
+    // let preliminary_diagnosis = '';
+    // try {
+    //   const mlResponse = await axios.post(`${process.env.ML_SERVICE_URL}/diagnose`, {
+    //     symptoms: symptoms
+    //   });
+    //   preliminary_diagnosis = mlResponse.data.diagnosis;
+    // } catch (mlError) {
+    //   console.error('ML service error:', mlError);
+    //   preliminary_diagnosis = 'Preliminary analysis unavailable. Please consult with doctor.';
+    // }
 
     const appointment = await Appointment.create({
       patient_id: patient.id,
       doctor_id,
-      appointment_date,
-      symptoms,
-      preliminary_diagnosis
+      appointment_date
+      // symptoms
+      // preliminary_diagnosis
     });
 
     res.json({ 

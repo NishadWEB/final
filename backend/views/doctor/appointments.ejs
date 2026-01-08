@@ -52,7 +52,6 @@
                                 
                                 <div class="appointment-details">
                                     <p><strong>Date & Time:</strong> <%= new Date(appointment.appointment_date).toLocaleString() %></p>
-                                    <p><strong>Symptoms:</strong> <%= appointment.symptoms %></p>
                                     <% if (appointment.preliminary_diagnosis) { %>
                                         <p><strong>Preliminary Diagnosis:</strong> <%= appointment.preliminary_diagnosis %></p>
                                     <% } %>
